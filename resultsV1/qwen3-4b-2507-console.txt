@@ -1,0 +1,39 @@
+[qwen3-4b-2507] warmup...
+  intent_short  i01 ok=1 wall=12.2s pp=6.2 tg=4.5 
+  intent_short  i02 ok=0 wall=14.75s pp=6.3 tg=4.5 
+  intent_short  i03 ok=1 wall=19.14s pp=6.3 tg=4.5 
+  intent_short  i04 ok=0 wall=17.82s pp=6.3 tg=4.5 
+  intent_short  i05 ok=1 wall=10.9s pp=6.2 tg=4.4 
+  intent_short  i06 ok=1 wall=13.86s pp=6.3 tg=4.4 
+  intent_short  i07 ok=1 wall=13.28s pp=6.3 tg=4.5 
+  intent_short  i08 ok=1 wall=13.71s pp=6.3 tg=4.5 
+  intent_short  i09 ok=1 wall=15.59s pp=6.3 tg=4.5 
+  intent_short  i10 ok=1 wall=13.79s pp=6.3 tg=4.5 
+  intent_short  i11 ok=1 wall=12.67s pp=6.3 tg=4.5 
+  intent_short  i12 ok=0 wall=13.88s pp=6.3 tg=4.5 
+  intent_full   i01 ok=1 wall=58.47s pp=6.6 tg=4.2 
+  intent_full   i02 ok=0 wall=15.18s pp=5.8 tg=4.3 
+  intent_full   i03 ok=1 wall=20.81s pp=5.8 tg=4.3 
+  intent_full   i04 ok=0 wall=18.62s pp=5.8 tg=4.3 
+  intent_full   i05 ok=1 wall=13.57s pp=5.7 tg=4.3 
+  intent_full   i06 ok=1 wall=14.22s pp=5.7 tg=4.2 
+  intent_full   i07 ok=1 wall=14.27s pp=5.7 tg=4.3 
+  intent_full   i08 ok=1 wall=14.47s pp=5.8 tg=4.3 
+  intent_full   i09 ok=1 wall=16.28s pp=5.7 tg=4.3 
+  intent_full   i10 ok=1 wall=14.72s pp=5.7 tg=4.3 
+  intent_full   i11 ok=1 wall=13.47s pp=5.8 tg=4.3 
+  intent_full   i12 ok=0 wall=14.64s pp=5.7 tg=4.3 
+  sql           s01 ok=1 wall=76.4s pp=6.7 tg=4.6 
+  sql           s02 ok=1 wall=13.41s pp=6.0 tg=4.6 
+  sql           s03 ok=1 wall=6.85s pp=5.9 tg=4.6 
+  sql           s04 ok=0 wall=11.17s pp=6.0 tg=4.5 
+  sql           s05 ok=1 wall=15.2s pp=6.0 tg=4.6 
+  sql           s06 ok=0 wall=14.58s pp=6.0 tg=4.5 
+
+== qwen3-4b-2507 (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     75     83   15.5     6.3     4.5      13.8     19.14
+intent_full    12    100     75    100   16.5     5.8     4.3      14.7     58.47
+sql             6    100     67      -   18.0     6.0     4.6      14.0      76.4
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/qwen3-4b-2507-warm-20260918-0140.csv

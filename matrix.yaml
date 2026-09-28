@@ -1,0 +1,567 @@
+# Matrice dei test per l'articolo "LLM su hardware datato" (piano: llm-hardware-datato-piano-test.md)
+#
+# Come si legge:
+#   models / quants / engines / tests   = i cataloghi (cosa esiste)
+#   sweeps                              = quali combinazioni provare (cosa si incrocia con cosa)
+#
+# L'ordine di `models` è l'ordine di esecuzione: un modello viene esaurito (tutte le sue
+# quantizzazioni, motori, parametri e test) prima di passare al successivo.
+#
+# Voci segnate "DA VERIFICARE" contengono nomi di repo, URL o opzioni che non ho potuto
+# controllare: se sono sbagliati, `prepare` e `run` lo registrano come errore, niente di più.
+
+paths:
+  data: ../labdata              # modelli, dataset, build dei motori, log (relativo a questo file)
+  db: ../results/lab.sqlite     # tutti i risultati
+  bench_dir: ..                 # cartella con bench.py, cases_v2.json, seed.sql
+
+keep_models: true               # false: cancella i GGUF scaricati dopo aver finito un modello
+keep_work: false
+quantize_engine: llamacpp-native
+
+# Wattmetro: comando che stampa i watt istantanei (es. presa Shelly/Tasmota). null = non misurato.
+# Esempio Shelly Plug S:  curl -s http://192.168.1.50/meter/0 | python3 -c "import json,sys;print(json.load(sys.stdin)['power'])"
+power:
+  cmd: null
+  interval_s: 1.0
+
+timeouts:
+  server_start_s: 900           # qwen3.5-4b a freddo ~130 s su NASGUL; i 9B molto di più
+  request_s: 1800
+  test_s: 172800
+  tool_s: 14400
+
+machines:
+  nasgul:
+    hostname: nasgul
+    max_model_gb: 12            # 16 GB meno sistema e servizi
+    # stime grezze per `plan`, da correggere con i primi dati reali
+    speed: {tg_gb_per_s: 11, pp_tps_1b: 23}
+  z87:
+    hostname: z87
+    max_model_gb: 12
+    speed: {tg_gb_per_s: 13, pp_tps_1b: 90}
+
+defaults:
+  params:
+    threads: physical           # physical | logical | numero
+    threads_batch: null         # null = uguale a threads
+    fa: "on"
+    kv: f16
+    batch: 2048
+    ubatch: 512
+    ctx: 8192
+    thinking: "off"             # ignorato per i modelli senza capability thinking
+    prompt_cache: "on"
+    draft: none                 # oppure "modello:quant" per la decodifica speculativa
+
+# ---------------------------------------------------------------------------------------------
+# Quantizzazioni. `bits` serve solo per stime e grafici. `make` = prodotta in locale con
+# llama-quantize partendo da `from` (serve per il confronto pulito con/senza imatrix).
+quants:
+  BF16:          {format: gguf, bits: 16}
+  Q8_0:          {format: gguf, bits: 8.5}
+  Q6_K:          {format: gguf, bits: 6.6}
+  Q5_K_M:        {format: gguf, bits: 5.7}
+  Q4_K_M:        {format: gguf, bits: 4.8}
+  Q4_0:          {format: gguf, bits: 4.5}
+  IQ4_XS:        {format: gguf, bits: 4.3}
+  Q3_K_M:        {format: gguf, bits: 3.9}
+  IQ3_S:         {format: gguf, bits: 3.4}
+  IQ3_XXS:       {format: gguf, bits: 3.1}
+  Q2_K:          {format: gguf, bits: 2.6}
+  IQ2_XXS:       {format: gguf, bits: 2.1}
+  UD-Q4_K_XL:    {format: gguf, bits: 5.0}
+  UD-Q3_K_XL:    {format: gguf, bits: 4.0}
+  UD-Q2_K_XL:    {format: gguf, bits: 3.0}
+  Q4_K_M-imat:   {format: gguf, bits: 4.8, make: {from: BF16, type: Q4_K_M, imatrix: true}}
+  Q4_K_M-noimat: {format: gguf, bits: 4.8, make: {from: BF16, type: Q4_K_M, imatrix: false}}
+  Q3_K_M-imat:   {format: gguf, bits: 3.9, make: {from: BF16, type: Q3_K_M, imatrix: true}}
+  Q3_K_M-noimat: {format: gguf, bits: 3.9, make: {from: BF16, type: Q3_K_M, imatrix: false}}
+  MXFP4:         {format: gguf, bits: 4.25}
+  I2_S:          {format: gguf-bitnet, bits: 2.0, source: gguf}
+  OV-INT4:       {format: openvino, bits: 4.5}
+  ONNX-INT4:     {format: onnx, bits: 4.5}
+  HF-FP32:       {format: hf, bits: 32}
+
+# ---------------------------------------------------------------------------------------------
+# Modelli, nell'ordine di esecuzione. Per usare un GGUF già scaricato:
+#   quants: {Q4_K_M: {local_path: /percorso/file.gguf}}
+# Per un file con nome insolito:  quants: {Q4_K_M: {file: "*Q4_K_M*.gguf"}}
+models:
+  qwen3.5-4b:
+    family: qwen3.5
+    params_b: 4
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: unsloth/Qwen3.5-4B-GGUF}          # DA VERIFICARE
+      hf: {repo: Qwen/Qwen3.5-4B}                    # DA VERIFICARE
+      openvino: {repo: OpenVINO/Qwen3.5-4B-int4-ov}  # DA VERIFICARE: potrebbe non esistere
+  qwen3.5-0.8b:
+    family: qwen3.5
+    params_b: 0.8
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: unsloth/Qwen3.5-0.8B-GGUF}
+      hf: {repo: Qwen/Qwen3.5-0.8B}
+      openvino: {repo: OpenVINO/Qwen3.5-0.8B-int4-ov}
+  qwen3.5-2b:
+    family: qwen3.5
+    params_b: 2
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: unsloth/Qwen3.5-2B-GGUF}
+      hf: {repo: Qwen/Qwen3.5-2B}
+      openvino: {repo: OpenVINO/Qwen3.5-2B-int4-ov}
+  qwen3.5-9b:
+    family: qwen3.5
+    params_b: 9
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: unsloth/Qwen3.5-9B-GGUF}
+  gemma4-e2b:
+    family: gemma4
+    params_b: 5.1                # parametri totali (con embedding per layer)
+    active_params_b: 2
+    capabilities: [thinking]
+    llamacpp_args: ["--swa-full"]
+    sources:
+      gguf: {repo: unsloth/gemma-4-E2B-it-GGUF}      # DA VERIFICARE
+  gemma4-e4b:
+    family: gemma4
+    params_b: 8
+    active_params_b: 4
+    capabilities: [thinking]
+    llamacpp_args: ["--swa-full"]
+    sources:
+      gguf: {repo: unsloth/gemma-4-E4B-it-GGUF}      # DA VERIFICARE
+  ministral3-3b:
+    family: ministral3
+    params_b: 3.4
+    sources:
+      gguf: {repo: unsloth/Ministral-3-3B-Instruct-2512-GGUF}  # DA VERIFICARE
+  phi4-mini:
+    family: phi4
+    params_b: 3.8
+    sources:
+      gguf: {repo: unsloth/Phi-4-mini-instruct-GGUF}
+      onnx: {repo: microsoft/Phi-4-mini-instruct-onnx}
+  smollm3-3b:
+    family: smollm3
+    params_b: 3
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: unsloth/SmolLM3-3B-GGUF}
+  llama3.2-3b:
+    family: llama3.2
+    params_b: 3.2
+    sources:
+      gguf: {repo: unsloth/Llama-3.2-3B-Instruct-GGUF}
+  llama3.2-1b:
+    family: llama3.2
+    params_b: 1.2
+    sources:
+      gguf: {repo: unsloth/Llama-3.2-1B-Instruct-GGUF}
+  qwen3-4b-2507:
+    family: qwen3
+    params_b: 4
+    sources:
+      gguf: {repo: unsloth/Qwen3-4B-Instruct-2507-GGUF}
+  minicpm5-2b:
+    family: minicpm5
+    params_b: 2
+    sources:
+      gguf: {repo: openbmb/MiniCPM5-2B-GGUF}         # DA VERIFICARE
+  lfm2.5-1.2b:
+    family: lfm2.5
+    params_b: 1.2
+    sources:
+      gguf: {repo: LiquidAI/LFM2.5-1.2B-Instruct-GGUF}  # DA VERIFICARE
+  lfm2.5-8b-a1b:
+    family: lfm2.5
+    params_b: 8.3
+    active_params_b: 1.5
+    capabilities: [thinking]
+    sources:
+      gguf: {repo: LiquidAI/LFM2.5-8B-A1B-GGUF}      # DA VERIFICARE
+  bitnet-2b:
+    family: bitnet
+    params_b: 2.4
+    allowed_quants: [I2_S]
+    engines: [bitnet-cpp]
+    sources:
+      gguf: {repo: microsoft/bitnet-b1.58-2B-4T-gguf}
+  gpt-oss-20b:
+    family: gpt-oss
+    params_b: 21
+    active_params_b: 3.6
+    allowed_quants: [MXFP4]
+    machines: [z87]
+    max_model_gb: 13.5           # eccezione al tetto di 12 GB: va lanciato senza altri servizi attivi
+    sources:
+      gguf: {repo: ggml-org/gpt-oss-20b-GGUF}
+  velvet-2b:
+    enabled: false               # DA VERIFICARE disponibilità GGUF e supporto llama.cpp
+    family: velvet
+    params_b: 2
+    sources:
+      gguf: {repo: Almawave/Velvet-2B-GGUF}
+
+# ---------------------------------------------------------------------------------------------
+# Motori. `kind: llamacpp` = llama.cpp e derivati (hanno llama-bench/perplexity/quantize).
+# `kind: generic` = qualunque server OpenAI descritto qui, senza codice.
+engines:
+  llamacpp-native:
+    kind: llamacpp
+    repo: https://github.com/ggml-org/llama.cpp
+    ref: master                  # fissa un tag (es. b7000) per risultati riproducibili
+    cmake_flags: ["-DGGML_NATIVE=ON", "-DLLAMA_CURL=OFF"]
+    # bin_dir: /percorso/llama.cpp/build/bin   # per usare una build esistente (es. quella di Palantir)
+  llamacpp-docker:
+    kind: llamacpp
+    image_server: ghcr.io/ggml-org/llama.cpp:server
+    image_full: ghcr.io/ggml-org/llama.cpp:full
+  ik-llamacpp:
+    kind: llamacpp
+    repo: https://github.com/ikawrakow/ik_llama.cpp
+    ref: main
+    fa_style: switch             # ik usa -fa senza valore
+    thinking_off_args: []        # DA VERIFICARE: --reasoning-budget potrebbe mancare
+    cmake_flags: ["-DGGML_NATIVE=ON"]
+  ollama:
+    kind: ollama
+    image: ollama/ollama:latest
+    thinking_off_body: {think: false}   # DA VERIFICARE sull'endpoint /v1
+  koboldcpp:
+    kind: generic
+    formats: [gguf]
+    download:
+      url: https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp-linux-x64-nocuda
+      url_noavx2: https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp-linux-x64-oldpc
+      file: koboldcpp
+    cmd: ["{bin}", "--model", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--skiplauncher", "--quiet"]
+    supported_params: [threads, ctx, batch, fa, kv]
+    param_args:
+      threads: ["--threads", "{threads}", "--blasthreads", "{threads}"]
+      ctx: ["--contextsize", "{ctx}"]
+      batch: ["--blasbatchsize", "512"]
+      fa: {"on": ["--flashattention"], "off": []}
+      kv: {"f16": [], "q8_0": ["--quantkv", "1"], "q4_0": ["--quantkv", "2"]}
+    noavx2_args: ["--noavx2"]
+    model_name: koboldcpp
+  llamafile:
+    kind: generic
+    formats: [gguf]
+    download:
+      url: https://github.com/Mozilla-Ocho/llamafile/releases/download/0.9.3/llamafile-0.9.3  # DA VERIFICARE
+      file: llamafile
+    cmd: ["sh", "{bin}", "--server", "--nobrowser", "-m", "{model}", "--host", "127.0.0.1", "--port", "{port}"]
+    supported_params: [threads, ctx, fa]
+    param_args:
+      threads: ["-t", "{threads}"]
+      ctx: ["-c", "{ctx}"]
+      fa: {"on": ["-fa"], "off": []}
+  openvino:
+    kind: generic
+    formats: [openvino]
+    requires_cpu: [avx2]         # dal 2026.0
+    image: openvino/model_server:latest
+    docker_args: ["-u", "0"]
+    cmd: ["--source_model", "{model_repo}", "--model_repository_path", "{data}/ovms", "--model_name", "lab",
+          "--task", "text_generation", "--target_device", "CPU", "--rest_port", "{port}"]
+    supported_params: []
+    api_base: /v3
+    ready_path: /v2/health/ready
+    model_name: lab
+  onnx-genai:
+    kind: generic
+    formats: [onnx]
+    cmd: ["{python}", "{lab}/shims/openai_shim.py", "--backend", "onnx", "--model", "{model_repo}", "--port", "{port}"]
+    supported_params: []
+    prepare_cmds: [["{python}", "-m", "pip", "install", "-q", "onnxruntime-genai", "transformers", "huggingface_hub"]]
+    version_cmd: ["{python}", "-c", "import onnxruntime_genai as o; print(o.__version__)"]
+  transformers:
+    kind: generic
+    formats: [hf]
+    max_params_b: 2
+    cmd: ["{python}", "{lab}/shims/openai_shim.py", "--backend", "transformers", "--model", "{model_repo}",
+          "--port", "{port}", "--dtype", "float32"]
+    supported_params: [threads]
+    param_args:
+      threads: ["--threads", "{threads}"]
+    prepare_cmds:
+      - ["{python}", "-m", "pip", "install", "-q", "torch", "--index-url", "https://download.pytorch.org/whl/cpu"]
+      - ["{python}", "-m", "pip", "install", "-q", "transformers", "accelerate"]
+    version_cmd: ["{python}", "-c", "import torch, transformers; print(torch.__version__, transformers.__version__)"]
+    speed_factor: 0.2
+  bitnet-cpp:
+    kind: llamacpp
+    formats: [gguf-bitnet]
+    repo: https://github.com/microsoft/BitNet
+    ref: main
+    fa_style: switch
+    jinja: false
+    thinking_off_args: []
+    cmake_flags: ["-DBITNET_X86_TL2=OFF"]   # DA VERIFICARE: la build ufficiale passa da setup_env.py
+  mock:
+    enabled: false
+    kind: generic
+    formats: [gguf]
+    cmd: ["{python}", "{lab}/shims/mock_server.py", "--port", "{port}"]
+    supported_params: [threads]
+    version_cmd: ["{python}", "-c", "print('mock-1')"]
+
+# ---------------------------------------------------------------------------------------------
+# Corpora per la KL divergence
+corpora:
+  wiki_en: {hf: Salesforce/wikitext, config: wikitext-2-raw-v1, split: test, field: text}
+  wiki_it: {hf: wikimedia/wikipedia, config: 20231101.it, split: train, field: text, streaming: true, max_chars: 400000}
+
+
+# ---------------------------------------------------------------------------------------------
+# Dove girano i test di qualità pubblici. A temperatura 0 l'accuratezza non dipende dalla CPU
+# (salvo differenze numeriche minime tra kernel AVX e AVX2): basta misurarla su una macchina.
+# NASGUL fa la velocità (llama_bench) e il test intenti, che misura insieme qualità e latenza reale.
+# Per rifare la qualità anche su NASGUL: [z87, nasgul].
+quality_machines: &qm [z87]
+
+# ---------------------------------------------------------------------------------------------
+# Test, in versione ridotta. Le opzioni (limit, seed, prompt...) entrano nella chiave: cambiarle
+# rifà solo quel test. `est` serve solo a `plan` (n casi, token medi di prompt e risposta).
+# Regola seguita: su NASGUL un token di prompt costa ~0,17 s, quindi si tagliano prima i prompt
+# lunghi, poi il numero di casi (mai sotto ~40, altrimenti l'intervallo di confidenza è inutile).
+tests:
+  llama_bench: {pp: 512, tg: 128, reps: 3}
+  kld:
+    corpora: [wiki_en, wiki_it]
+    chunks: 10                   # ~5k token per corpus: bastano per confrontare le quantizzazioni
+    ctx: 512
+    base: [BF16, Q8_0]
+    engines: [llamacpp-native]
+    machines: *qm
+  ifeval:
+    kind: lmeval
+    tasks: [ifeval]
+    limit: 80
+    gen_kwargs: {max_gen_toks: 512}
+    primary_metric: prompt_level_strict_acc
+    machines: *qm
+    est: {n: 80, prompt_tok: 90, gen_tok: 280}
+  multi_if:
+    language: Italian            # DA VERIFICARE: valore del campo 'language' nel dataset
+    limit: 40
+    turns: 2                     # il terzo turno ripete il contesto dei primi due: costo quasi doppio
+    max_tokens: 400
+    machines: *qm
+    est: {n: 40, prompt_tok: 350, gen_tok: 500}
+  json_free:                     # JSONSchemaBench senza grammatica, zero-shot, schemi corti
+    kind: jsonschema_constrained
+    constrained: false
+    subsets: [Github_easy]
+    max_schema_chars: 1500
+    limit: 50
+    max_tokens: 384
+    machines: *qm
+    est: {n: 50, prompt_tok: 450, gen_tok: 120}
+  json_grammar:                  # stessi casi, con la grammatica del motore
+    kind: jsonschema_constrained
+    constrained: true
+    subsets: [Github_easy]
+    max_schema_chars: 1500
+    limit: 50
+    max_tokens: 384
+    machines: *qm
+    est: {n: 50, prompt_tok: 450, gen_tok: 120}
+  evalita_ner_re:                # un solo dataset NER (ADG) e RE, con i due prompt ciascuno
+    kind: lmeval
+    tasks: [evalita-mp_ner_adg_p1, evalita-mp_ner_adg_p2, evalita-mp_re_prompt-1, evalita-mp_re_prompt-2]
+    limit: 25                    # per sottotask: 100 casi in tutto
+    machines: *qm
+    est: {n: 100, prompt_tok: 350, gen_tok: 60}
+  evalita_sa:
+    limit: 100
+    machines: *qm
+    est: {n: 100, prompt_tok: 90, gen_tok: 8}
+  belebele_it:
+    kind: belebele
+    lang: ita_Latn
+    limit: 80
+    machines: *qm
+    est: {n: 80, prompt_tok: 450, gen_tok: 3}
+  belebele_en:
+    kind: belebele
+    lang: eng_Latn
+    limit: 80
+    machines: *qm
+    est: {n: 80, prompt_tok: 380, gen_tok: 3}
+  bfcl:
+    categories: [simple_python, irrelevance]
+    limit_per_category: 40
+    machines: *qm
+    est: {n: 80, prompt_tok: 300, gen_tok: 40}
+  gilpa_intent:
+    tasks: [intent_v3]
+    extra_tokens: 500
+    est: {n: 38, prompt_tok: 20, gen_tok: 20}
+  gilpa_sql:
+    kind: gilpa_intent
+    tasks: [sql_v2]
+    extra_tokens: 500
+    est: {n: 6, prompt_tok: 60, gen_tok: 60}
+  gilpa_stability:
+    kind: gilpa_intent
+    tasks: [intent_v3]
+    extra_tokens: 500
+    invocations: 5
+    est: {n: 190, prompt_tok: 20, gen_tok: 20}
+  gsm8k:
+    kind: lmeval
+    tasks: [gsm8k_cot_zeroshot]
+    limit: 50
+    gen_kwargs: {max_gen_toks: 512}
+    max_gen_toks_thinking: 3072
+    machines: *qm
+    est: {n: 50, prompt_tok: 120, gen_tok: 250}
+
+  # --- Esclusi (restano qui per chi ha più tempo o hardware) ---------------------------------
+  evalita_sum:
+    enabled: false               # articoli da ~1100 token: ~1,5 h a modello anche sulla Z87
+    kind: lmeval
+    tasks: [evalita-mp_sum_fp]
+    limit: 20
+    est: {n: 40, prompt_tok: 1100, gen_tok: 150}
+  jsonschema_lmeval:
+    enabled: false               # versione lm-eval 2-shot: prompt ~1500 token; sostituita da json_free
+    kind: lmeval
+    tasks: [jsonschema_bench_easy]
+    limit: 100
+    est: {n: 100, prompt_tok: 1500, gen_tok: 150}
+  mmlu_prox_it:
+    enabled: false
+    kind: lmeval
+    tasks: [mmlu_prox_lite_it]
+    limit: 10
+    est: {n: 140, prompt_tok: 300, gen_tok: 300}
+  localscore:
+    enabled: false               # DA VERIFICARE URL e riga di comando prima di abilitarlo
+    bin_url: https://blob.localscore.ai/localscore-0.9.3
+    model_urls: []
+    cmd: ["{bin}", "-m", "{model}", "--cpu"]
+  mock_quality:
+    enabled: false
+    n: 5
+
+suites:
+  base: [llama_bench, kld, ifeval, multi_if, json_free, json_grammar, evalita_ner_re, evalita_sa,
+         belebele_it, belebele_en, bfcl, gilpa_intent]
+  # quantizzazioni e controllo Q8: la KLD misura già la deriva, qui bastano test brevi su compiti diversi
+  controllo: [llama_bench, kld, belebele_it, json_free, gilpa_intent]
+  # a parità di pesi i motori differiscono per velocità, template e grammatica, non per "intelligenza"
+  motori: [llama_bench, gilpa_intent, json_grammar]
+  veloce: [llama_bench, gilpa_intent]
+  completa: [base, gilpa_sql, gsm8k]
+
+# ---------------------------------------------------------------------------------------------
+# Sweep: ogni sweep incrocia modelli x quant x motori x parametri x test. Le celle uguali tra
+# sweep diversi si eseguono una volta sola. `params` = griglia (prodotto cartesiano),
+# `params_list` = combinazioni esplicite, `params_fixed` = valori fissi.
+sweeps:
+  # §3: tutti i modelli in Q4_K_M con la suite base
+  modelli:
+    models: all
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    tests: base
+
+  # §3: Q8_0 come controllo di qualità, con la suite ridotta
+  controllo-q8:
+    models: all
+    quants: [Q8_0]
+    engines: [llamacpp-native]
+    tests: controllo
+
+  # §3.2: thinking on/off sulla baseline
+  thinking:
+    models: [qwen3.5-4b, qwen3.5-2b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    params: {thinking: ["on", "off"]}
+    tests: [gilpa_intent, gsm8k]  # con thinking on IFEval genera migliaia di token a caso: escluso
+
+  # §5: scansione delle quantizzazioni
+  quant-scan:
+    models: [qwen3.5-4b, qwen3.5-0.8b]
+    quants: [BF16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q4_0, IQ4_XS, Q3_K_M, IQ3_S, IQ3_XXS, Q2_K, IQ2_XXS,
+             UD-Q4_K_XL, UD-Q3_K_XL, UD-Q2_K_XL, Q4_K_M-imat, Q4_K_M-noimat, Q3_K_M-imat, Q3_K_M-noimat]
+    engines: [llamacpp-native]
+    tests: controllo
+
+  # §5: meglio grande compresso o piccolo preciso?
+  grande-vs-preciso:
+    models: [qwen3.5-9b]
+    quants: [Q3_K_M, IQ3_S, IQ3_XXS, Q4_K_M]
+    engines: [llamacpp-native]
+    tests: controllo
+
+  # §4: motori a parità di modello (e, dove il motore usa un altro formato, il suo formato)
+  motori:
+    models: [qwen3.5-4b, qwen3.5-2b, qwen3.5-0.8b, phi4-mini]
+    quants: [Q4_K_M, OV-INT4, ONNX-INT4, HF-FP32]
+    engines: all
+    tests: motori
+
+  # §4: variabili interne di llama.cpp
+  parametri-llamacpp:
+    models: [qwen3.5-4b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    params:
+      threads: [2, 4]
+      fa: ["on", "off"]
+      kv: [f16, q8_0, q4_0]
+    tests: veloce
+  batch:
+    models: [qwen3.5-4b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    params_list:
+      - {batch: 512, ubatch: 128}
+      - {batch: 512, ubatch: 512}
+      - {batch: 2048, ubatch: 512}
+      - {batch: 2048, ubatch: 2048}
+    tests: [llama_bench]
+  prompt-cache:
+    models: [qwen3.5-4b, qwen3.5-2b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native, ik-llamacpp, ollama]
+    params: {prompt_cache: ["on", "off"]}
+    tests: [gilpa_intent]
+
+  # §4: decodifica speculativa
+  speculativa:
+    models: [qwen3.5-9b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    params: {draft: [none, "qwen3.5-0.8b:Q8_0"]}
+    tests: [gilpa_intent, ifeval]
+
+  # §6.3: stabilità
+  stabilita:
+    models: [qwen3.5-4b, qwen3.5-2b, ministral3-3b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    tests: [gilpa_stability]
+
+  # Tutto per tutto: prodotto cartesiano completo. Disabilitato: `plan --sweep tutto` per il costo.
+  tutto:
+    enabled: false
+    models: all
+    quants: all
+    engines: all
+    params:
+      threads: [2, 4]
+      fa: ["on", "off"]
+      kv: [f16, q8_0, q4_0]
+      thinking: ["on", "off"]
+      prompt_cache: ["on", "off"]
+    tests: completa

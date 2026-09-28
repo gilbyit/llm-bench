@@ -1,0 +1,39 @@
+[gemma3-4b] warmup...
+  intent_short  i01 ok=1 wall=43.6s pp=7.6 tg=5.1 
+  intent_short  i02 ok=1 wall=45.33s pp=7.6 tg=5.1 
+  intent_short  i03 ok=1 wall=48.27s pp=7.6 tg=5.1 
+  intent_short  i04 ok=0 wall=46.98s pp=7.6 tg=5.0 
+  intent_short  i05 ok=1 wall=44.92s pp=7.5 tg=4.9 
+  intent_short  i06 ok=1 wall=45.65s pp=7.4 tg=4.9 
+  intent_short  i07 ok=1 wall=45.78s pp=7.5 tg=4.8 
+  intent_short  i08 ok=0 wall=47.12s pp=7.5 tg=4.9 
+  intent_short  i09 ok=1 wall=45.54s pp=7.5 tg=4.9 
+  intent_short  i10 ok=1 wall=45.62s pp=7.5 tg=4.9 
+  intent_short  i11 ok=1 wall=44.79s pp=7.5 tg=4.9 
+  intent_short  i12 ok=1 wall=45.82s pp=7.5 tg=5.0 
+  intent_full   i01 ok=1 wall=88.1s pp=7.4 tg=4.8 
+  intent_full   i02 ok=1 wall=84.86s pp=7.4 tg=4.7 
+  intent_full   i03 ok=1 wall=92.25s pp=7.5 tg=3.4 
+  intent_full   i04 ok=1 wall=112.92s pp=5.5 tg=3.7 
+  intent_full   i05 ok=1 wall=89.82s pp=6.5 tg=4.8 
+  intent_full   i06 ok=1 wall=81.04s pp=7.4 tg=4.7 
+  intent_full   i07 ok=1 wall=81.21s pp=7.4 tg=4.7 
+  intent_full   i08 ok=0 wall=82.79s pp=7.4 tg=4.8 
+  intent_full   i09 ok=1 wall=82.08s pp=7.4 tg=4.8 
+  intent_full   i10 ok=1 wall=81.16s pp=7.4 tg=4.8 
+  intent_full   i11 ok=1 wall=80.62s pp=7.5 tg=4.7 
+  intent_full   i12 ok=1 wall=81.67s pp=7.4 tg=4.9 
+  sql           s01 ok=0 wall=68.42s pp=7.6 tg=5.1 
+  sql           s02 ok=1 wall=68.73s pp=7.6 tg=5.1 
+  sql           s03 ok=1 wall=62.11s pp=7.6 tg=5.1 
+  sql           s04 ok=0 wall=68.14s pp=7.6 tg=5.1 
+  sql           s05 ok=1 wall=67.61s pp=7.6 tg=5.1 
+  sql           s06 ok=0 wall=63.78s pp=7.6 tg=5.1 OperationalError: no such column: activity_log.day_of_week
+
+== gemma3-4b (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     83     67  247.0     7.5     4.9      45.6     48.27
+intent_full    12    100     92     92  507.0     7.4     4.8      82.4    112.92
+sql             6    100     50      -  435.0     7.6     5.1      67.9     68.73
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/gemma3-4b-warm-20260918-0119.csv

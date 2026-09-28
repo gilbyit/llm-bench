@@ -1,0 +1,39 @@
+[gemma4-e4b] warmup...
+  intent_short  i01 ok=1 wall=17.75s pp=5.5 tg=4.1 
+  intent_short  i02 ok=1 wall=19.68s pp=5.7 tg=4.1 
+  intent_short  i03 ok=1 wall=24.52s pp=5.7 tg=4.1 
+  intent_short  i04 ok=1 wall=23.46s pp=5.6 tg=4.1 
+  intent_short  i05 ok=1 wall=17.91s pp=5.5 tg=4.1 
+  intent_short  i06 ok=1 wall=19.1s pp=5.6 tg=4.1 
+  intent_short  i07 ok=1 wall=18.71s pp=5.6 tg=4.1 
+  intent_short  i08 ok=1 wall=18.94s pp=5.6 tg=4.1 
+  intent_short  i09 ok=1 wall=19.2s pp=5.6 tg=4.1 
+  intent_short  i10 ok=1 wall=18.33s pp=5.6 tg=4.1 
+  intent_short  i11 ok=1 wall=17.24s pp=5.6 tg=4.1 
+  intent_short  i12 ok=0 wall=18.8s pp=5.6 tg=4.1 
+  intent_full   i01 ok=1 wall=71.08s pp=5.9 tg=4.0 
+  intent_full   i02 ok=1 wall=19.41s pp=5.5 tg=4.0 
+  intent_full   i03 ok=1 wall=24.34s pp=5.6 tg=4.0 
+  intent_full   i04 ok=1 wall=22.28s pp=5.5 tg=4.0 
+  intent_full   i05 ok=1 wall=17.36s pp=5.4 tg=4.0 
+  intent_full   i06 ok=1 wall=17.8s pp=5.5 tg=4.0 
+  intent_full   i07 ok=1 wall=19.11s pp=5.5 tg=4.0 
+  intent_full   i08 ok=1 wall=19.05s pp=5.5 tg=3.9 
+  intent_full   i09 ok=1 wall=18.79s pp=5.5 tg=4.0 
+  intent_full   i10 ok=1 wall=18.24s pp=5.4 tg=4.0 
+  intent_full   i11 ok=1 wall=17.09s pp=5.5 tg=4.0 
+  intent_full   i12 ok=0 wall=17.93s pp=5.5 tg=4.0 
+  sql           s01 ok=0 wall=95.43s pp=5.9 tg=4.1 
+  sql           s02 ok=1 wall=21.8s pp=5.4 tg=3.9 
+  sql           s03 ok=1 wall=8.43s pp=5.3 tg=4.1 
+  sql           s04 ok=0 wall=19.86s pp=5.3 tg=4.1 
+  sql           s05 ok=1 wall=23.0s pp=5.5 tg=4.1 
+  sql           s06 ok=0 wall=16.54s pp=5.4 tg=4.1 
+
+== gemma4-e4b (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     92     83   19.0     5.6     4.1      18.9     24.52
+intent_full    12    100     92    100   15.0     5.5     4.0      18.9     71.08
+sql             6    100     50      -   20.0     5.4     4.1      20.8     95.43
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/gemma4-e4b-warm-20260918-1001.csv

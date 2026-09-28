@@ -1,0 +1,39 @@
+[llama3.2-3b] warmup...
+  intent_short  i01 ok=1 wall=10.42s pp=8.0 tg=5.8 
+  intent_short  i02 ok=1 wall=11.74s pp=8.2 tg=5.8 
+  intent_short  i03 ok=1 wall=14.58s pp=8.3 tg=5.8 
+  intent_short  i04 ok=1 wall=14.65s pp=8.2 tg=5.8 
+  intent_short  i05 ok=1 wall=12.53s pp=8.0 tg=5.5 
+  intent_short  i06 ok=1 wall=11.07s pp=8.1 tg=5.6 
+  intent_short  i07 ok=1 wall=13.72s pp=8.0 tg=5.7 
+  intent_short  i08 ok=0 wall=12.64s pp=8.2 tg=5.6 
+  intent_short  i09 ok=1 wall=14.06s pp=7.8 tg=5.6 
+  intent_short  i10 ok=1 wall=14.41s pp=8.1 tg=5.5 
+  intent_short  i11 ok=1 wall=12.96s pp=8.1 tg=5.6 
+  intent_short  i12 ok=1 wall=11.87s pp=8.0 tg=5.7 
+  intent_full   i01 ok=1 wall=47.11s pp=8.4 tg=5.2 
+  intent_full   i02 ok=1 wall=14.74s pp=7.1 tg=5.3 
+  intent_full   i03 ok=1 wall=16.39s pp=7.6 tg=5.3 
+  intent_full   i04 ok=1 wall=15.24s pp=7.3 tg=5.3 
+  intent_full   i05 ok=1 wall=17.74s pp=7.5 tg=5.2 
+  intent_full   i06 ok=1 wall=13.68s pp=7.1 tg=5.3 
+  intent_full   i07 ok=1 wall=14.12s pp=7.2 tg=5.3 
+  intent_full   i08 ok=1 wall=14.38s pp=7.6 tg=5.3 
+  intent_full   i09 ok=1 wall=14.42s pp=7.4 tg=5.3 
+  intent_full   i10 ok=1 wall=14.38s pp=7.3 tg=5.3 
+  intent_full   i11 ok=1 wall=12.86s pp=7.5 tg=5.3 
+  intent_full   i12 ok=0 wall=14.79s pp=7.5 tg=5.4 
+  sql           s01 ok=0 wall=59.82s pp=8.5 tg=5.8 
+  sql           s02 ok=0 wall=19.18s pp=7.8 tg=5.7 OperationalError: no such column: time_blocks.day_of_week
+  sql           s03 ok=1 wall=4.13s pp=7.6 tg=5.9 
+  sql           s04 ok=1 wall=5.37s pp=7.7 tg=5.9 
+  sql           s05 ok=0 wall=11.51s pp=7.7 tg=5.9 OperationalError: no such column: to_buy
+  sql           s06 ok=0 wall=11.11s pp=7.6 tg=5.9 
+
+== llama3.2-3b (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     92     83   15.5     8.1     5.7      12.8     14.65
+intent_full    12    100     92    100   16.5     7.5     5.3      14.6     47.11
+sql             6    100     33      -   18.0     7.7     5.9      11.3     59.82
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/llama3.2-3b-warm-20260918-0044.csv

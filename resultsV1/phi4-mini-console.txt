@@ -1,0 +1,39 @@
+[phi4-mini] warmup...
+  intent_short  i01 ok=1 wall=12.48s pp=6.5 tg=4.8 
+  intent_short  i02 ok=0 wall=20.08s pp=6.7 tg=4.7 
+  intent_short  i03 ok=1 wall=18.41s pp=6.7 tg=4.7 
+  intent_short  i04 ok=1 wall=16.35s pp=6.6 tg=4.7 
+  intent_short  i05 ok=1 wall=13.52s pp=6.6 tg=4.8 
+  intent_short  i06 ok=1 wall=14.93s pp=6.7 tg=4.7 
+  intent_short  i07 ok=1 wall=13.04s pp=6.6 tg=4.8 
+  intent_short  i08 ok=0 wall=12.6s pp=6.5 tg=4.8 
+  intent_short  i09 ok=1 wall=13.99s pp=6.7 tg=4.8 
+  intent_short  i10 ok=0 wall=12.9s pp=6.7 tg=4.8 
+  intent_short  i11 ok=1 wall=13.27s pp=6.7 tg=4.8 
+  intent_short  i12 ok=0 wall=13.97s pp=6.6 tg=4.7 
+  intent_full   i01 ok=1 wall=54.31s pp=7.0 tg=4.4 
+  intent_full   i02 ok=0 wall=14.52s pp=6.2 tg=4.4 
+  intent_full   i03 ok=1 wall=19.39s pp=6.3 tg=4.5 
+  intent_full   i04 ok=1 wall=16.69s pp=6.2 tg=4.5 
+  intent_full   i05 ok=1 wall=19.52s pp=6.2 tg=4.4 
+  intent_full   i06 ok=1 wall=15.43s pp=6.2 tg=4.4 
+  intent_full   i07 ok=0 wall=13.11s pp=6.2 tg=4.5 
+  intent_full   i08 ok=0 wall=13.45s pp=6.2 tg=4.5 
+  intent_full   i09 ok=1 wall=15.26s pp=6.2 tg=4.4 
+  intent_full   i10 ok=1 wall=13.44s pp=6.1 tg=4.5 
+  intent_full   i11 ok=1 wall=12.78s pp=6.2 tg=4.5 
+  intent_full   i12 ok=0 wall=13.75s pp=6.2 tg=4.5 
+  sql           s01 ok=0 wall=75.11s pp=7.1 tg=4.7 OperationalError: no such column: to_buy
+  sql           s02 ok=1 wall=14.05s pp=6.5 tg=4.7 
+  sql           s03 ok=1 wall=6.1s pp=6.4 tg=4.7 
+  sql           s04 ok=0 wall=13.9s pp=6.4 tg=4.7 
+  sql           s05 ok=1 wall=12.8s pp=6.5 tg=4.7 
+  sql           s06 ok=1 wall=8.74s pp=6.4 tg=4.7 
+
+== phi4-mini (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     67     83   12.0     6.7     4.8      13.7     20.08
+intent_full    12    100     67     92   12.0     6.2     4.5      14.9     54.31
+sql             6    100     67      -   13.0     6.5     4.7      13.4     75.11
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/phi4-mini-warm-20260918-0129.csv

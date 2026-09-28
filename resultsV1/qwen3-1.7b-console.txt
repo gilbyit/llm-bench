@@ -1,0 +1,39 @@
+[qwen3-1.7b] warmup...
+  intent_short  i01 ok=0 wall=6.73s pp=15.4 tg=9.2 
+  intent_short  i02 ok=1 wall=8.02s pp=14.9 tg=9.0 
+  intent_short  i03 ok=1 wall=9.11s pp=15.8 tg=8.9 
+  intent_short  i04 ok=1 wall=8.25s pp=15.5 tg=9.2 
+  intent_short  i05 ok=1 wall=6.35s pp=15.3 tg=9.2 
+  intent_short  i06 ok=1 wall=6.75s pp=15.0 tg=9.2 
+  intent_short  i07 ok=0 wall=6.62s pp=15.5 tg=8.7 
+  intent_short  i08 ok=1 wall=6.82s pp=14.9 tg=9.1 
+  intent_short  i09 ok=1 wall=7.41s pp=15.1 tg=9.2 
+  intent_short  i10 ok=1 wall=6.86s pp=15.3 tg=9.2 
+  intent_short  i11 ok=1 wall=6.49s pp=14.6 tg=9.0 
+  intent_short  i12 ok=0 wall=7.29s pp=14.2 tg=9.2 
+  intent_full   i01 ok=0 wall=25.6s pp=16.1 tg=8.1 
+  intent_full   i02 ok=1 wall=9.19s pp=14.4 tg=8.2 
+  intent_full   i03 ok=1 wall=10.22s pp=14.4 tg=8.5 
+  intent_full   i04 ok=1 wall=9.14s pp=14.2 tg=8.5 
+  intent_full   i05 ok=1 wall=9.42s pp=14.0 tg=8.4 
+  intent_full   i06 ok=1 wall=8.27s pp=14.0 tg=8.8 
+  intent_full   i07 ok=1 wall=7.13s pp=13.0 tg=8.7 
+  intent_full   i08 ok=1 wall=7.43s pp=14.6 tg=8.3 
+  intent_full   i09 ok=1 wall=7.95s pp=14.5 tg=8.5 
+  intent_full   i10 ok=0 wall=7.22s pp=14.0 tg=8.8 
+  intent_full   i11 ok=1 wall=6.86s pp=14.3 tg=8.4 
+  intent_full   i12 ok=0 wall=8.92s pp=14.3 tg=8.6 
+  sql           s01 ok=0 wall=29.42s pp=16.7 tg=9.9 OperationalError: no such column: p.shop
+  sql           s02 ok=1 wall=4.69s pp=15.2 tg=10.1 
+  sql           s03 ok=1 wall=2.79s pp=15.3 tg=9.9 
+  sql           s04 ok=1 wall=3.72s pp=15.3 tg=9.9 
+  sql           s05 ok=1 wall=5.63s pp=15.2 tg=9.9 
+  sql           s06 ok=1 wall=3.23s pp=15.3 tg=10.1 
+
+== qwen3-1.7b (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     75     67   19.5    15.2     9.2       6.8      9.11
+intent_full    12    100     75     92   20.5    14.3     8.5       8.6      25.6
+sql             6    100     83      -   22.0    15.3     9.9       4.2     29.42
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/qwen3-1.7b-warm-20260918-0035.csv

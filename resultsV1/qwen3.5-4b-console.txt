@@ -1,0 +1,39 @@
+[qwen3.5-4b] warmup...
+  intent_short  i01 ok=1 wall=16.69s pp=5.6 tg=4.1 
+  intent_short  i02 ok=1 wall=18.86s pp=5.7 tg=4.0 
+  intent_short  i03 ok=1 wall=24.21s pp=5.7 tg=4.1 
+  intent_short  i04 ok=0 wall=21.9s pp=5.7 tg=4.0 
+  intent_short  i05 ok=1 wall=16.63s pp=5.6 tg=4.0 
+  intent_short  i06 ok=1 wall=17.53s pp=5.6 tg=4.0 
+  intent_short  i07 ok=1 wall=18.32s pp=5.6 tg=4.0 
+  intent_short  i08 ok=1 wall=18.22s pp=5.6 tg=4.1 
+  intent_short  i09 ok=1 wall=18.07s pp=5.7 tg=4.0 
+  intent_short  i10 ok=1 wall=17.25s pp=5.6 tg=4.0 
+  intent_short  i11 ok=1 wall=16.52s pp=5.6 tg=4.0 
+  intent_short  i12 ok=1 wall=17.37s pp=5.6 tg=4.1 
+  intent_full   i01 ok=1 wall=100.99s pp=5.8 tg=4.1 
+  intent_full   i02 ok=1 wall=18.32s pp=5.6 tg=4.1 
+  intent_full   i03 ok=1 wall=24.31s pp=5.6 tg=4.1 
+  intent_full   i04 ok=1 wall=22.53s pp=5.6 tg=4.1 
+  intent_full   i05 ok=1 wall=16.88s pp=5.5 tg=4.0 
+  intent_full   i06 ok=1 wall=17.23s pp=5.5 tg=4.1 
+  intent_full   i07 ok=1 wall=16.91s pp=5.6 tg=4.1 
+  intent_full   i08 ok=1 wall=17.8s pp=5.6 tg=4.0 
+  intent_full   i09 ok=1 wall=18.23s pp=5.5 tg=4.1 
+  intent_full   i10 ok=1 wall=17.31s pp=5.6 tg=4.0 
+  intent_full   i11 ok=1 wall=16.43s pp=5.6 tg=4.1 
+  intent_full   i12 ok=1 wall=17.25s pp=5.6 tg=4.1 
+  sql           s01 ok=1 wall=88.46s pp=5.8 tg=4.2 
+  sql           s02 ok=1 wall=15.46s pp=5.7 tg=4.2 
+  sql           s03 ok=1 wall=12.38s pp=5.6 tg=4.2 
+  sql           s04 ok=0 wall=12.4s pp=5.6 tg=4.2 
+  sql           s05 ok=0 wall=14.75s pp=5.6 tg=4.2 OperationalError: unrecognized token: "}"
+  sql           s06 ok=1 wall=10.45s pp=5.6 tg=4.2 
+
+== qwen3.5-4b (warm) ==
+task            n  json%   acc%   ent%  p_tok  pp t/s  tg t/s  wall med  wall max
+intent_short   12    100     92     83   22.0     5.6     4.0      17.8     24.21
+intent_full    12    100    100     83   22.0     5.6     4.1      17.6    100.99
+sql             6    100     67      -   23.0     5.6     4.2      13.6     88.46
+
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/qwen3.5-4b-warm-20260918-0946.csv

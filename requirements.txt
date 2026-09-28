@@ -1,0 +1,10 @@
+# Orchestratore
+pyyaml>=6
+# Test pubblici
+lm-eval[api,ifeval]>=0.4.9
+datasets>=3
+jsonschema[format]>=4
+scikit-learn
+evaluate
+langdetect
+# bfcl-eval si installa senza dipendenze (servono solo i dati): vedi setup.sh

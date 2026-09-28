@@ -1,4 +1,4 @@
-models/
-resultsV1/
+.venv/
 __pycache__/
+models/
 *.gguf
