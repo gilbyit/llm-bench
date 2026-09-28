@@ -1,0 +1,25 @@
+# etichetta   repo_huggingface:quantizzazione   (formato di llama-server -hf)
+# Ordinati per dimensione. Il primo giro fallo con i piccoli, poi aggiungi i grandi.
+
+# Generazione 2025, nomi repo noti
+#qwen3-1.7b          unsloth/Qwen3-1.7B-GGUF:Q4_K_M
+#llama3.2-3b         bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M
+#gemma3-4b           ggml-org/gemma-3-4b-it-GGUF:Q4_K_M
+#phi4-mini           unsloth/Phi-4-mini-instruct-GGUF:Q4_K_M
+#qwen3-4b-2507       unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M
+#qwen3-8b            unsloth/Qwen3-8B-GGUF:Q4_K_M
+
+# Generazione 2026: VERIFICA il nome esatto del repo su huggingface.co prima di scommentare
+#qwen3.5-2b        unsloth/Qwen3.5-2B-GGUF:Q4_K_M
+#qwen3.5-4b        unsloth/Qwen3.5-4B-GGUF:Q4_K_M
+#gemma4-e4b      unsloth/gemma-4-E4B-it-GGUF:Q4_K_M   --reasoning-budget 0 --no-mmproj
+#gemma4-e2b      unsloth/gemma-4-E2B-it-GGUF:Q4_K_M   --reasoning-budget 0 --no-mmproj
+
+# Altri candidati
+#lfm2.5-8b-a1b   unsloth/LFM2.5-8B-A1B-GGUF:Q4_K_M
+#granite4.1-3b   unsloth/granite-4.1-3b-GGUF:Q4_K_M
+#ministral3-3b   unsloth/Ministral-3-3B-Instruct-2512-GGUF:Q4_K_M   --no-mmproj
+#smollm3-3b      ggml-org/SmolLM3-3B-GGUF:Q4_K_M
+#qwen3.5-0.8b    unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M
+minicpm5-2b	bartowski/MiniCPM5-2B-GGUF:Q4_K_M
+

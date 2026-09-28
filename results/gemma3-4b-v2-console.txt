@@ -1,0 +1,50 @@
+[gemma3-4b] intent_v2: prima richiesta a freddo 100.31s (714 token di prompt)
+  intent_v2     i01 ok=1 ent=1 clean=1 wall=71.58s gen=12 tg=4.8 
+  intent_v2     i02 ok=1 ent=1 clean=1 wall=73.53s gen=14 tg=4.7 
+  intent_v2     i03 ok=1 ent=0 clean=1 wall=77.8s gen=35 tg=4.8 
+  intent_v2     i04 ok=1 ent=1 clean=1 wall=76.74s gen=30 tg=4.8 
+  intent_v2     i05 ok=1 ent=1 clean=0 wall=72.96s gen=27 tg=4.6 
+  intent_v2     i06 ok=1 ent=1 clean=1 wall=71.5s gen=13 tg=4.6 
+  intent_v2     i07 ok=1 ent=1 clean=1 wall=71.84s gen=13 tg=4.8 
+  intent_v2     i08 ok=1 ent=1 clean=1 wall=74.83s gen=26 tg=4.7 
+  intent_v2     i09 ok=1 ent=1 clean=1 wall=72.18s gen=15 tg=4.7 
+  intent_v2     i10 ok=1 ent=1 clean=1 wall=70.38s gen=13 tg=4.8 
+  intent_v2     i11 ok=1 ent=1 clean=1 wall=69.88s gen=6 tg=4.7 
+  intent_v2     i12 ok=1 ent=1 clean=1 wall=72.26s gen=15 tg=4.6 
+  intent_v2     i13 ok=1 ent=1 clean=1 wall=71.82s gen=13 tg=4.4 
+  intent_v2     i14 ok=1 ent=1 clean=1 wall=72.89s gen=13 tg=4.6 
+  intent_v2     i15 ok=1 ent=1 clean=1 wall=71.77s gen=15 tg=4.8 
+  intent_v2     i16 ok=1 ent=1 clean=1 wall=71.03s gen=12 tg=4.9 
+  intent_v2     i17 ok=1 ent=0 clean=1 wall=77.38s gen=27 tg=4.7 
+  intent_v2     i18 ok=1 ent=1 clean=1 wall=76.97s gen=33 tg=4.6 
+  intent_v2     i19 ok=1 ent=1 clean=1 wall=74.83s gen=27 tg=4.7 
+  intent_v2     i20 ok=1 ent=1 clean=1 wall=70.86s gen=13 tg=4.8 
+  intent_v2     i21 ok=1 ent=1 clean=1 wall=70.27s gen=12 tg=4.6 
+  intent_v2     i22 ok=1 ent=1 clean=1 wall=70.12s gen=12 tg=4.5 
+  intent_v2     i23 ok=1 ent=1 clean=1 wall=71.78s gen=13 tg=4.5 
+  intent_v2     i24 ok=1 ent=1 clean=1 wall=73.48s gen=22 tg=4.7 
+  intent_v2     i25 ok=1 ent=1 clean=1 wall=72.82s gen=19 tg=4.5 
+  intent_v2     i26 ok=1 ent=1 clean=1 wall=72.96s gen=19 tg=4.7 
+  intent_v2     i27 ok=1 ent=1 clean=1 wall=72.18s gen=16 tg=4.8 
+  intent_v2     i28 ok=1 ent=1 clean=1 wall=72.44s gen=16 tg=4.7 
+  intent_v2     i29 ok=1 ent=0 clean=1 wall=70.58s gen=8 tg=4.8 
+  intent_v2     i30 ok=1 ent=1 clean=1 wall=70.83s gen=8 tg=4.9 
+  intent_v2     i31 ok=1 ent=1 clean=0 wall=72.78s gen=18 tg=4.5 
+  intent_v2     i32 ok=0 ent=1 clean=0 wall=72.0s gen=13 tg=4.6 
+  intent_v2     i33 ok=1 ent=1 clean=1 wall=71.09s gen=7 tg=4.9 
+  intent_v2     i34 ok=1 ent=1 clean=1 wall=73.7s gen=19 tg=4.6 
+[gemma3-4b] sql_v2: prima richiesta a freddo 84.3s (597 token di prompt)
+  sql_v2        s01 ok=0 ent=None clean=None wall=80.44s gen=47 tg=4.8 
+  sql_v2        s02 ok=1 ent=None clean=None wall=79.23s gen=45 tg=4.8 
+  sql_v2        s03 ok=1 ent=None clean=None wall=74.27s gen=29 tg=4.8 
+  sql_v2        s04 ok=1 ent=None clean=None wall=78.34s gen=46 tg=4.8 
+  sql_v2        s05 ok=1 ent=None clean=None wall=83.04s gen=62 tg=4.8 
+  sql_v2        s06 ok=1 ent=None clean=None wall=76.06s gen=36 tg=4.9 
+
+== gemma3-4b (warm) ==
+task            n  json%   acc%   ent%  clean%  g_tok  tg t/s  wall med  wall max  freddo s
+intent_v2      34    100     97     91      91   14.5     4.7      72.2      77.8    100.31
+sql_v2          6    100     83      -       -   45.5     4.8      78.8     83.04      84.3
+
+Sbagliati: intent_v2:i32 sql_v2:s01
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/gemma3-4b-warm-20260918-1259.csv

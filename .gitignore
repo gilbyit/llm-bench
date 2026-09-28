@@ -1,0 +1,4 @@
+models/
+resultsV1/
+__pycache__/
+*.gguf

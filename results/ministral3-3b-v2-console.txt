@@ -1,0 +1,46 @@
+[ministral3-3b] intent_v3: prima richiesta a freddo 94.17s (730 token di prompt)
+  intent_v3     i01 ok=1 ent=1 clean=1 wall=3.86s gen=15 tg=4.8 
+  intent_v3     i02 ok=1 ent=1 clean=1 wall=5.56s gen=16 tg=4.9 
+  intent_v3     i03 ok=1 ent=1 clean=1 wall=18.16s gen=61 tg=4.6 
+  intent_v3     i04 ok=1 ent=1 clean=1 wall=9.9s gen=33 tg=4.8 
+  intent_v3     i05 ok=1 ent=1 clean=1 wall=4.55s gen=16 tg=4.7 
+  intent_v3     i06 ok=1 ent=1 clean=1 wall=5.02s gen=15 tg=4.4 
+  intent_v3     i07 ok=1 ent=1 clean=1 wall=4.94s gen=16 tg=4.8 
+  intent_v3     i08 ok=1 ent=1 clean=1 wall=6.61s gen=23 tg=4.8 
+  intent_v3     i09 ok=1 ent=1 clean=1 wall=5.35s gen=18 tg=4.8 
+  intent_v3     i10 ok=1 ent=1 clean=1 wall=5.04s gen=17 tg=4.8 
+  intent_v3     i11 ok=1 ent=1 clean=1 wall=3.34s gen=10 tg=4.9 
+  intent_v3     i12 ok=1 ent=1 clean=1 wall=5.18s gen=18 tg=4.6 
+  intent_v3     i13 ok=1 ent=1 clean=1 wall=4.36s gen=15 tg=4.9 
+  intent_v3     i14 ok=1 ent=1 clean=1 wall=5.74s gen=15 tg=4.8 
+  intent_v3     i15 ok=1 ent=1 clean=1 wall=4.84s gen=18 tg=4.9 
+  intent_v3     i16 ok=1 ent=1 clean=1 wall=4.72s gen=16 tg=4.9 
+  intent_v3     i17 ok=1 ent=1 clean=1 wall=13.54s gen=39 tg=4.5 
+  intent_v3     i18 ok=1 ent=1 clean=1 wall=11.48s gen=36 tg=4.7 
+  intent_v3     i19 ok=1 ent=1 clean=1 wall=9.3s gen=30 tg=4.8 
+  intent_v3     i20 ok=1 ent=1 clean=1 wall=5.45s gen=16 tg=4.6 
+  intent_v3     i21 ok=1 ent=1 clean=1 wall=4.21s gen=15 tg=4.9 
+  intent_v3     i22 ok=1 ent=1 clean=1 wall=4.31s gen=16 tg=4.8 
+  intent_v3     i23 ok=1 ent=1 clean=1 wall=5.7s gen=16 tg=4.7 
+  intent_v3     i24 ok=1 ent=1 clean=1 wall=7.69s gen=27 tg=4.7 
+  intent_v3     i25 ok=1 ent=1 clean=1 wall=6.88s gen=22 tg=4.7 
+  intent_v3     i26 ok=1 ent=1 clean=1 wall=6.57s gen=21 tg=4.5 
+  intent_v3     i27 ok=1 ent=1 clean=1 wall=6.32s gen=21 tg=4.8 
+  intent_v3     i28 ok=1 ent=1 clean=1 wall=5.82s gen=20 tg=4.8 
+  intent_v3     i29 ok=1 ent=1 clean=1 wall=4.96s gen=16 tg=4.8 
+  intent_v3     i30 ok=0 ent=1 clean=1 wall=3.21s gen=10 tg=4.9 
+  intent_v3     i31 ok=1 ent=1 clean=1 wall=3.61s gen=12 tg=4.6 
+  intent_v3     i32 ok=1 ent=1 clean=1 wall=3.3s gen=10 tg=4.7 
+  intent_v3     i33 ok=1 ent=1 clean=1 wall=3.67s gen=10 tg=4.9 
+  intent_v3     i34 ok=1 ent=1 clean=1 wall=6.55s gen=22 tg=4.6 
+  intent_v3     i35 ok=1 ent=1 clean=1 wall=4.39s gen=15 tg=4.9 
+  intent_v3     i36 ok=1 ent=1 clean=1 wall=4.97s gen=18 tg=4.9 
+  intent_v3     i37 ok=1 ent=1 clean=1 wall=4.24s gen=15 tg=4.9 
+  intent_v3     i38 ok=1 ent=1 clean=1 wall=4.78s gen=16 tg=4.9 
+
+== ministral3-3b (warm) ==
+task            n  json%   acc%   ent%  clean%  g_tok  tg t/s  wall med  wall max  freddo s
+intent_v3      38    100     97    100     100   16.0     4.8       5.0     18.16     94.17
+
+Sbagliati: intent_v3:i30
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/ministral3-3b-warm-20260918-1618.csv

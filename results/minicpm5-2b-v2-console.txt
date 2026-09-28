@@ -1,0 +1,46 @@
+[minicpm5-2b] intent_v3: prima richiesta a freddo 74.0s (838 token di prompt)
+  intent_v3     i01 ok=1 ent=1 clean=1 wall=2.87s gen=12 tg=7.4 
+  intent_v3     i02 ok=1 ent=0 clean=1 wall=3.6s gen=8 tg=7.3 
+  intent_v3     i03 ok=1 ent=0 clean=1 wall=7.93s gen=31 tg=7.4 
+  intent_v3     i04 ok=1 ent=0 clean=1 wall=6.17s gen=26 tg=7.3 
+  intent_v3     i05 ok=1 ent=1 clean=1 wall=2.98s gen=9 tg=7.4 
+  intent_v3     i06 ok=1 ent=1 clean=1 wall=3.6s gen=12 tg=7.4 
+  intent_v3     i07 ok=1 ent=1 clean=1 wall=3.76s gen=14 tg=7.4 
+  intent_v3     i08 ok=1 ent=0 clean=1 wall=4.9s gen=21 tg=7.4 
+  intent_v3     i09 ok=1 ent=1 clean=1 wall=4.39s gen=16 tg=7.4 
+  intent_v3     i10 ok=1 ent=0 clean=1 wall=3.3s gen=9 tg=7.4 
+  intent_v3     i11 ok=1 ent=1 clean=1 wall=2.72s gen=7 tg=7.4 
+  intent_v3     i12 ok=0 ent=0 clean=1 wall=2.93s gen=7 tg=7.3 
+  intent_v3     i13 ok=1 ent=1 clean=1 wall=3.4s gen=12 tg=7.4 
+  intent_v3     i14 ok=1 ent=1 clean=1 wall=4.53s gen=12 tg=7.4 
+  intent_v3     i15 ok=0 ent=0 clean=1 wall=2.51s gen=7 tg=7.4 
+  intent_v3     i16 ok=1 ent=1 clean=1 wall=3.42s gen=13 tg=7.4 
+  intent_v3     i17 ok=1 ent=0 clean=0 wall=8.58s gen=37 tg=7.4 
+  intent_v3     i18 ok=1 ent=0 clean=1 wall=6.77s gen=27 tg=7.4 
+  intent_v3     i19 ok=1 ent=1 clean=1 wall=6.74s gen=29 tg=7.4 
+  intent_v3     i20 ok=1 ent=1 clean=1 wall=4.15s gen=13 tg=7.4 
+  intent_v3     i21 ok=1 ent=1 clean=1 wall=3.29s gen=12 tg=7.4 
+  intent_v3     i22 ok=1 ent=1 clean=1 wall=3.46s gen=14 tg=7.4 
+  intent_v3     i23 ok=1 ent=1 clean=1 wall=4.84s gen=14 tg=7.4 
+  intent_v3     i24 ok=1 ent=1 clean=1 wall=5.41s gen=23 tg=7.4 
+  intent_v3     i25 ok=1 ent=0 clean=1 wall=4.99s gen=21 tg=7.3 
+  intent_v3     i26 ok=1 ent=1 clean=1 wall=4.73s gen=18 tg=7.4 
+  intent_v3     i27 ok=1 ent=1 clean=1 wall=4.76s gen=18 tg=7.3 
+  intent_v3     i28 ok=1 ent=1 clean=1 wall=4.5s gen=17 tg=7.4 
+  intent_v3     i29 ok=0 ent=0 clean=1 wall=3.19s gen=7 tg=7.4 
+  intent_v3     i30 ok=0 ent=1 clean=1 wall=2.85s gen=7 tg=7.4 
+  intent_v3     i31 ok=1 ent=1 clean=1 wall=2.68s gen=9 tg=7.4 
+  intent_v3     i32 ok=1 ent=1 clean=1 wall=2.63s gen=7 tg=7.3 
+  intent_v3     i33 ok=1 ent=1 clean=1 wall=2.73s gen=7 tg=7.4 
+  intent_v3     i34 ok=1 ent=1 clean=1 wall=4.49s gen=17 tg=7.4 
+  intent_v3     i35 ok=1 ent=1 clean=1 wall=3.52s gen=12 tg=7.4 
+  intent_v3     i36 ok=1 ent=1 clean=1 wall=3.88s gen=14 tg=7.4 
+  intent_v3     i37 ok=1 ent=1 clean=1 wall=3.28s gen=12 tg=7.4 
+  intent_v3     i38 ok=1 ent=1 clean=1 wall=3.76s gen=13 tg=7.4 
+
+== minicpm5-2b (warm) ==
+task            n  json%   acc%   ent%  clean%  g_tok  tg t/s  wall med  wall max  freddo s
+intent_v3      38    100     89     71      97   13.0     7.4       3.7      8.58      74.0
+
+Sbagliati: intent_v3:i12 intent_v3:i15 intent_v3:i29 intent_v3:i30
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/minicpm5-2b-warm-20260921-1106.csv

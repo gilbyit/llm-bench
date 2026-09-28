@@ -1,0 +1,50 @@
+[qwen3-1.7b] intent_v2: prima richiesta a freddo 46.14s (745 token di prompt)
+  intent_v2     i01 ok=1 ent=1 clean=1 wall=2.32s gen=11 tg=8.2 
+  intent_v2     i02 ok=1 ent=1 clean=1 wall=3.44s gen=12 tg=8.4 
+  intent_v2     i03 ok=1 ent=0 clean=1 wall=7.14s gen=34 tg=7.8 
+  intent_v2     i04 ok=1 ent=1 clean=1 wall=5.77s gen=29 tg=8.2 
+  intent_v2     i05 ok=1 ent=1 clean=1 wall=2.13s gen=7 tg=8.8 
+  intent_v2     i06 ok=1 ent=1 clean=1 wall=2.9s gen=11 tg=8.7 
+  intent_v2     i07 ok=1 ent=0 clean=1 wall=2.86s gen=11 tg=8.4 
+  intent_v2     i08 ok=1 ent=0 clean=1 wall=4.43s gen=24 tg=8.5 
+  intent_v2     i09 ok=1 ent=1 clean=1 wall=3.65s gen=15 tg=8.4 
+  intent_v2     i10 ok=1 ent=0 clean=0 wall=3.26s gen=13 tg=8.4 
+  intent_v2     i11 ok=1 ent=1 clean=1 wall=2.13s gen=6 tg=8.7 
+  intent_v2     i12 ok=1 ent=1 clean=1 wall=2.94s gen=14 tg=8.6 
+  intent_v2     i13 ok=1 ent=1 clean=1 wall=2.67s gen=11 tg=8.8 
+  intent_v2     i14 ok=1 ent=1 clean=1 wall=3.69s gen=11 tg=8.0 
+  intent_v2     i15 ok=1 ent=1 clean=1 wall=2.88s gen=14 tg=8.6 
+  intent_v2     i16 ok=0 ent=1 clean=1 wall=2.67s gen=12 tg=8.2 
+  intent_v2     i17 ok=1 ent=0 clean=1 wall=7.04s gen=32 tg=8.0 
+  intent_v2     i18 ok=1 ent=1 clean=1 wall=6.61s gen=32 tg=8.0 
+  intent_v2     i19 ok=1 ent=1 clean=1 wall=5.4s gen=26 tg=8.2 
+  intent_v2     i20 ok=1 ent=1 clean=1 wall=3.42s gen=12 tg=7.7 
+  intent_v2     i21 ok=1 ent=1 clean=1 wall=2.51s gen=11 tg=8.8 
+  intent_v2     i22 ok=1 ent=0 clean=1 wall=2.59s gen=12 tg=8.8 
+  intent_v2     i23 ok=1 ent=1 clean=1 wall=3.65s gen=12 tg=8.2 
+  intent_v2     i24 ok=1 ent=1 clean=1 wall=4.71s gen=23 tg=8.4 
+  intent_v2     i25 ok=1 ent=1 clean=1 wall=3.95s gen=18 tg=8.0 
+  intent_v2     i26 ok=1 ent=1 clean=1 wall=4.61s gen=22 tg=7.9 
+  intent_v2     i27 ok=1 ent=1 clean=1 wall=3.9s gen=18 tg=8.6 
+  intent_v2     i28 ok=1 ent=1 clean=1 wall=3.49s gen=17 tg=8.5 
+  intent_v2     i29 ok=1 ent=0 clean=0 wall=3.47s gen=13 tg=8.1 
+  intent_v2     i30 ok=1 ent=1 clean=0 wall=3.4s gen=17 tg=8.4 
+  intent_v2     i31 ok=1 ent=1 clean=1 wall=1.96s gen=7 tg=8.7 
+  intent_v2     i32 ok=1 ent=1 clean=1 wall=1.95s gen=6 tg=8.8 
+  intent_v2     i33 ok=1 ent=1 clean=1 wall=2.46s gen=6 tg=8.5 
+  intent_v2     i34 ok=1 ent=1 clean=1 wall=5.02s gen=27 tg=8.4 
+[qwen3-1.7b] sql_v2: prima richiesta a freddo 37.13s (566 token di prompt)
+  sql_v2        s01 ok=1 ent=None clean=None wall=6.51s gen=47 tg=9.1 
+  sql_v2        s02 ok=0 ent=None clean=None wall=5.22s gen=32 tg=8.8 OperationalError: unrecognized token: "}"
+  sql_v2        s03 ok=0 ent=None clean=None wall=4.98s gen=36 tg=9.1 
+  sql_v2        s04 ok=0 ent=None clean=None wall=3.78s gen=24 tg=9.2 
+  sql_v2        s05 ok=0 ent=None clean=None wall=4.29s gen=24 tg=9.2 
+  sql_v2        s06 ok=0 ent=None clean=None wall=4.9s gen=32 tg=9.2 
+
+== qwen3-1.7b (warm) ==
+task            n  json%   acc%   ent%  clean%  g_tok  tg t/s  wall med  wall max  freddo s
+intent_v2      34    100     97     79      91   13.0     8.4       3.4      7.14     46.14
+sql_v2          6    100     17      -       -   32.0     9.1       4.9      6.51     37.13
+
+Sbagliati: intent_v2:i16 sql_v2:s02 sql_v2:s03 sql_v2:s04 sql_v2:s05 sql_v2:s06
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/qwen3-1.7b-warm-20260918-1159.csv

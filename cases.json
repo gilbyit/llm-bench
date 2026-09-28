@@ -1,0 +1,24 @@
+{
+  "intent": [
+    {"id": "i01", "msg": "vado da Action", "expect": {"intent": "shop_list", "shop": "action"}},
+    {"id": "i02", "msg": "sto per fare un ordine su ali, cosa c'è in lista?", "expect": {"intent": "shop_list", "shop": "aliexpress"}},
+    {"id": "i03", "msg": "aggiungi 2 resistenze da 10k per la domotica, le prendo da Action, 2 euro", "expect": {"intent": "add_component", "shop": "action", "project": "domotica", "item": "resistenz", "quantity": 2, "price": 2}},
+    {"id": "i04", "msg": "segnami un PicoPSU per NASGUL su Amazon a 25€", "expect": {"intent": "add_component", "shop": "amazon", "project": "nasgul", "item": "picopsu", "price": 25}},
+    {"id": "i05", "msg": "che progetti ho in piedi?", "expect": {"intent": "list_projects"}},
+    {"id": "i06", "msg": "se ordino tutto da Amazon quanto spendo?", "expect": {"intent": "estimate_order", "shop": "amazon"}},
+    {"id": "i07", "msg": "è da quanto che non guardo un film?", "expect": {"intent": "last_activity", "category": "cinema"}},
+    {"id": "i08", "msg": "ieri sera ho giocato due ore a Elden Ring", "expect": {"intent": "log_activity", "category": "gaming"}},
+    {"id": "i09", "msg": "inizia un pomodoro sull'album di Lia", "expect": {"intent": "start_pomodoro", "project": "lia"}},
+    {"id": "i10", "msg": "questa settimana quando vado in palestra?", "expect": {"intent": "weekly_plan", "category": "workout"}},
+    {"id": "i11", "msg": "che tempo fa domani a Torino?", "expect": {"intent": "unknown"}},
+    {"id": "i12", "msg": "passo dal leroy dopo il lavoro", "expect": {"intent": "shop_list", "shop": "leroy"}}
+  ],
+  "sql": [
+    {"id": "s01", "msg": "vado da Action, cosa devo comprare?", "ref": "SELECT name FROM components WHERE shop='Action' AND status='to_buy'"},
+    {"id": "s02", "msg": "quanto spendo se ordino tutto quello che manca da Amazon?", "ref": "SELECT SUM(estimated_price*quantity) FROM components WHERE shop='Amazon' AND status='to_buy'"},
+    {"id": "s03", "msg": "che progetti ho attivi?", "ref": "SELECT name FROM projects WHERE status='active'"},
+    {"id": "s04", "msg": "quando ho visto l'ultimo film?", "ref": "SELECT MAX(logged_at) FROM activity_log WHERE category='cinema'"},
+    {"id": "s05", "msg": "quanti componenti ad alta priorità mi mancano per NASGUL?", "ref": "SELECT COUNT(*) FROM components c JOIN projects p ON p.id=c.project_id WHERE p.name='NASGUL' AND c.priority='high' AND c.status='to_buy'"},
+    {"id": "s06", "msg": "in che giorni della settimana mi alleno?", "ref": "SELECT day_of_week FROM time_blocks WHERE category='workout'"}
+  ]
+}

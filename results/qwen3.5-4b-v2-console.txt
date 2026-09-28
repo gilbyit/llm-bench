@@ -1,0 +1,44 @@
+[qwen3.5-4b] intent_v3: prima richiesta a freddo 131.59s (741 token di prompt)
+  intent_v3     i01 ok=1 ent=1 clean=1 wall=5.65s gen=11 tg=4.0 
+  intent_v3     i02 ok=1 ent=1 clean=1 wall=7.89s gen=12 tg=3.8 
+  intent_v3     i03 ok=1 ent=1 clean=1 wall=16.17s gen=37 tg=3.9 
+  intent_v3     i04 ok=1 ent=1 clean=1 wall=12.71s gen=29 tg=3.9 
+  intent_v3     i05 ok=1 ent=1 clean=1 wall=4.97s gen=7 tg=3.7 
+  intent_v3     i06 ok=1 ent=1 clean=1 wall=6.88s gen=11 tg=3.7 
+  intent_v3     i07 ok=1 ent=1 clean=1 wall=7.08s gen=12 tg=3.9 
+  intent_v3     i08 ok=1 ent=1 clean=1 wall=8.74s gen=19 tg=3.9 
+  intent_v3     i09 ok=1 ent=1 clean=1 wall=7.41s gen=14 tg=4.0 
+  intent_v3     i10 ok=1 ent=1 clean=1 wall=6.56s gen=12 tg=4.0 
+  intent_v3     i11 ok=1 ent=1 clean=1 wall=4.93s gen=6 tg=3.9 
+  intent_v3     i12 ok=1 ent=1 clean=1 wall=6.81s gen=13 tg=4.0 
+  intent_v3     i13 ok=1 ent=1 clean=1 wall=6.37s gen=11 tg=3.9 
+  intent_v3     i14 ok=1 ent=1 clean=1 wall=7.91s gen=11 tg=3.9 
+  intent_v3     i15 ok=1 ent=1 clean=1 wall=6.88s gen=13 tg=3.7 
+  intent_v3     i16 ok=1 ent=1 clean=1 wall=6.26s gen=12 tg=3.8 
+  intent_v3     i17 ok=1 ent=1 clean=1 wall=15.81s gen=34 tg=3.9 
+  intent_v3     i18 ok=1 ent=1 clean=1 wall=14.39s gen=32 tg=4.0 
+  intent_v3     i19 ok=1 ent=1 clean=1 wall=11.94s gen=26 tg=4.0 
+  intent_v3     i20 ok=1 ent=1 clean=1 wall=7.5s gen=12 tg=4.0 
+  intent_v3     i21 ok=1 ent=1 clean=1 wall=6.52s gen=11 tg=3.6 
+  intent_v3     i22 ok=1 ent=1 clean=1 wall=6.17s gen=12 tg=4.0 
+  intent_v3     i23 ok=1 ent=1 clean=1 wall=7.92s gen=12 tg=3.9 
+  intent_v3     i24 ok=1 ent=1 clean=1 wall=10.02s gen=23 tg=3.9 
+  intent_v3     i25 ok=1 ent=1 clean=1 wall=8.87s gen=18 tg=3.9 
+  intent_v3     i26 ok=1 ent=1 clean=1 wall=8.55s gen=17 tg=4.0 
+  intent_v3     i27 ok=1 ent=1 clean=1 wall=8.37s gen=17 tg=4.0 
+  intent_v3     i28 ok=1 ent=1 clean=1 wall=7.92s gen=16 tg=4.0 
+  intent_v3     i29 ok=1 ent=1 clean=1 wall=6.48s gen=11 tg=4.0 
+  intent_v3     i30 ok=1 ent=1 clean=1 wall=5.11s gen=7 tg=4.0 
+  intent_v3     i31 ok=1 ent=1 clean=1 wall=4.75s gen=7 tg=3.8 
+  intent_v3     i32 ok=1 ent=1 clean=1 wall=4.86s gen=6 tg=4.0 
+  intent_v3     i33 ok=1 ent=1 clean=1 wall=5.32s gen=6 tg=4.1 
+  intent_v3     i34 ok=1 ent=1 clean=1 wall=6.76s gen=11 tg=3.9 
+  intent_v3     i35 ok=1 ent=1 clean=1 wall=6.52s gen=11 tg=3.8 
+  intent_v3     i36 ok=1 ent=1 clean=1 wall=6.88s gen=13 tg=4.0 
+  intent_v3     i37 ok=1 ent=1 clean=1 wall=6.05s gen=11 tg=3.7 
+  intent_v3     i38 ok=1 ent=1 clean=1 wall=6.49s gen=12 tg=4.0 
+
+== qwen3.5-4b (warm) ==
+task            n  json%   acc%   ent%  clean%  g_tok  tg t/s  wall med  wall max  freddo s
+intent_v3      38    100    100    100     100   12.0     3.9       6.9     16.17    131.59
+Dettagli: /srv/dev-disk-by-uuid-ca01a790-b973-4ae0-b0ab-b7fbd865b0fd/docker/gilpa-llm-bench/results/qwen3.5-4b-warm-20260918-1520.csv
