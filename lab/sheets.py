@@ -1,17 +1,16 @@
 """Copia dei risultati su un Google Sheet, a mano a mano che i test finiscono.
 
-Il foglio ha uno script Apps Script (lab/sheets_apps_script.gs) pubblicato come app web: riceve
-righe in JSON e le scrive. Qui non serve nessuna libreria Google né un account di servizio: solo
-l'URL dell'app web e un token condiviso.
+Scrive con un account di servizio Google (libreria gspread): il foglio è condiviso con l'email
+dell'account come Editor, e la chiave JSON sta sulla macchina fuori da git. Nessun altro accesso.
 
-Tre schede:
-  Risultati  una riga per cella (ultimo tentativo), aggiornata in place
+Tre schede, create da sole se mancano:
   Stato      una riga per macchina e sweep: fatte, da fare, errori, stima; più la riga "in corso"
-  Log        le righe del log del laboratorio, in coda (lo script tiene le ultime 3000)
+  Risultati  una riga per cella (ultimo tentativo), aggiornata in place
+  Log        le righe del log del laboratorio, in coda (tiene le ultime 3000)
 
-L'invio avviene in un thread a parte e non blocca mai i test: se la rete o Google non rispondono,
-le righe si riprovano per un po' e poi si lasciano perdere. `lab.sh sync` rimanda tutto dal
-database, quindi niente va perso davvero.
+Le colonne nuove si aggiungono in fondo da sole. L'invio avviene in un thread a parte e non blocca
+mai i test: se la rete o Google non rispondono le righe si riprovano per un po' e poi si lasciano
+perdere. `lab.sh sync` rimanda tutto dal database, quindi niente va perso davvero.
 """
 from __future__ import annotations
 
@@ -21,28 +20,124 @@ import os
 import queue
 import threading
 import time
-import urllib.request
 from collections import Counter, defaultdict
+from pathlib import Path
 
 from .util import now
 
-# Metrica mostrata nella colonna "risultato", in ordine di preferenza (suffisso del nome)
+# Metrica mostrata nella colonna "metrica/valore", in ordine di preferenza (suffisso del nome)
 PRIMARY = ("tutto_giusto_pct", "acc_pct", "compliance_pct", "prompt_acc_pct", "f1", "tg_tps", "kld_mean")
+ORDER = ("Stato", "Risultati", "Log")
+LOG_MAX = 3000
 
 
 def _num(v):
     return round(v, 4) if isinstance(v, float) else v
 
 
+class _GSheet:
+    """Upsert e append su un foglio Google via gspread. Tutto RAW: '38/38' resta testo, non una data."""
+
+    def __init__(self, sheet_id: str, cred_file: str):
+        self.sheet_id, self.cred_file = sheet_id, cred_file
+        self._sh = None
+        self._ws = {}
+        self._log_rows = None
+
+    def _book(self):
+        if self._sh is None:
+            try:
+                import gspread
+            except ImportError:
+                raise RuntimeError("manca gspread: lab/.venv/bin/pip install gspread")
+            self._sh = gspread.service_account(filename=self.cred_file).open_by_key(self.sheet_id)
+        return self._sh
+
+    def ws(self, name):
+        if name not in self._ws:
+            import gspread
+            sh = self._book()
+            try:
+                w = sh.worksheet(name)
+            except gspread.WorksheetNotFound:
+                idx = ORDER.index(name) if name in ORDER else None
+                w = sh.add_worksheet(title=name, rows=200, cols=10, index=idx)
+                w.freeze(rows=1)
+            self._ws[name] = w
+        return self._ws[name]
+
+    def _header(self, w, head, rows, key):
+        fresh = []
+        if key and key not in head:
+            fresh.append(key)
+        for r in rows:
+            for k in r:
+                if k not in head and k not in fresh:
+                    fresh.append(k)
+        if fresh:
+            head = head + fresh
+            if len(head) > w.col_count:
+                w.add_cols(len(head) - w.col_count)
+            w.update(range_name="A1", values=[head], value_input_option="RAW")
+            w.format("1:1", {"textFormat": {"bold": True}})
+        return head
+
+    def upsert(self, name, key, rows):
+        from gspread.utils import rowcol_to_a1
+        w = self.ws(name)
+        vals = w.get_all_values(value_render_option="UNFORMATTED_VALUE")   # i numeri restano numeri
+        head = self._header(w, vals[0] if vals else [], rows, key)
+        data = [r + [""] * (len(head) - len(r)) for r in vals[1:]]
+        kc = head.index(key)
+        index = {r[kc]: i for i, r in enumerate(data) if r[kc] != ""}
+        touched = []
+        for obj in rows:
+            k = str(obj[key])
+            i = index.get(k)
+            if i is None:
+                i = len(data)
+                data.append([""] * len(head))
+                index[k] = i
+            for c, h in enumerate(head):
+                if h in obj:
+                    data[i][c] = obj[h]
+            touched.append(i)
+        need = len(data) + 1
+        if need > w.row_count:
+            w.add_rows(need - w.row_count + 100)
+        last = rowcol_to_a1(1, len(head)).rstrip("0123456789")
+        upd = [{"range": f"A{i + 2}:{last}{i + 2}", "values": [data[i]]} for i in sorted(set(touched))]
+        w.batch_update(upd, value_input_option="RAW")
+
+    def append(self, name, rows):
+        w = self.ws(name)
+        vals_head = w.row_values(1)
+        head = self._header(w, vals_head, rows, None)
+        w.append_rows([[r.get(h, "") for h in head] for r in rows], value_input_option="RAW",
+                      table_range="A1")
+        if self._log_rows is None:
+            self._log_rows = len(w.col_values(1)) - 1
+        else:
+            self._log_rows += len(rows)
+        if self._log_rows > LOG_MAX + 200:
+            w.delete_rows(2, self._log_rows - LOG_MAX + 1)
+            self._log_rows = LOG_MAX
+
+
 class SheetSync:
-    def __init__(self, cfg: dict, machine_id: str, log_fn=None):
+    def __init__(self, cfg: dict, machine_id: str, log_fn=None, base_dir: Path | None = None):
         cfg = cfg or {}
-        self.url = os.environ.get(cfg.get("url_env", "LAB_SHEETS_URL")) or cfg.get("url")
-        self.token = os.environ.get(cfg.get("token_env", "LAB_SHEETS_TOKEN")) or cfg.get("token")
-        self.enabled = bool(self.url and self.token) and cfg.get("enabled", True)
+        sheet_id = os.environ.get(cfg.get("sheet_id_env", "LAB_SHEET_ID")) or cfg.get("sheet_id")
+        cred = os.environ.get(cfg.get("credentials_env", "LAB_SHEET_CREDENTIALS")) or cfg.get("credentials")
+        if cred and base_dir and not Path(cred).is_absolute():
+            cred = str((base_dir / cred).resolve())
+        self.enabled = bool(sheet_id and cred) and cfg.get("enabled", True)
+        if self.enabled and not Path(cred).exists():
+            (log_fn or print)(f"[sheets] chiave {cred} non trovata: copia sul foglio disattivata")
+            self.enabled = False
+        self.gs = _GSheet(sheet_id, cred) if self.enabled else None
         self.machine = machine_id
         self.log_lines = cfg.get("log", True)
-        self.timeout = cfg.get("timeout_s", 30)
         self._warn = log_fn or print
         self._q: queue.Queue = queue.Queue()
         self._logbuf: list = []
@@ -72,19 +167,11 @@ class SheetSync:
         self._th.join(wait_s)
 
     # --- invio -----------------------------------------------------------------------------
-    def _post(self, payload: dict) -> dict:
-        body = json.dumps({"token": self.token, **payload}, default=str).encode()
-        req = urllib.request.Request(self.url, data=body, headers={"Content-Type": "application/json"})
-        # Apps Script risponde con un 302: urllib lo segue con una GET, che è quello che serve
-        with urllib.request.urlopen(req, timeout=self.timeout) as r:
-            txt = r.read().decode("utf-8", "replace")
-        try:
-            res = json.loads(txt)
-        except json.JSONDecodeError:
-            raise RuntimeError(f"risposta non JSON (URL dell'app web giusto?): {txt[:120]}")
-        if not res.get("ok"):
-            raise RuntimeError(res.get("error", "errore sconosciuto"))
-        return res
+    def _post(self, payload: dict):
+        if payload["op"] == "upsert":
+            self.gs.upsert(payload["sheet"], payload["key"], payload["rows"])
+        else:
+            self.gs.append(payload["sheet"], payload["rows"])
 
     def _flush_log(self):
         with self._lock:
@@ -98,7 +185,7 @@ class SheetSync:
                 self._post(payload)
                 self._fails = 0
                 return True
-            except Exception as e:  # rete, quota Google, script non pubblicato...
+            except Exception as e:  # rete, quota Google (60 scritture/min), foglio non condiviso...
                 err = e
                 time.sleep(min(60, 5 * 2 ** i))
         self._fails += 1

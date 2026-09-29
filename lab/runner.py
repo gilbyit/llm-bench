@@ -61,12 +61,16 @@ class Lab:
         self.main_log = self.data_dir / "logs" / f"lab-{time.strftime('%Y%m%d')}.log"
         self.main_log.parent.mkdir(parents=True, exist_ok=True)
         self._ev_cache = {}
-        self.sheets = SheetSync(self.cfg.get("sheets"), mid, log_fn=self._log_local)
+        self.sheets = SheetSync(self.cfg.get("sheets"), mid, log_fn=self._log_local, base_dir=self.config_path.parent)
         if self.sheets.enabled:
             self.store.on_finish = self._sheet_result
 
     def _sheet_result(self, run_id):
-        row = result_row(self.store.db, run_id)
+        try:
+            row = result_row(self.store.db, run_id)
+        except Exception as e:
+            self._log_local(f"[sheets] riga del run {run_id} non preparata: {type(e).__name__}: {e}")
+            return
         if row:
             self.sheets.upsert("Risultati", "cella", [row])
 

@@ -251,7 +251,7 @@ def cmd_export(lab, a):
 def cmd_sync(lab, a):
     from .sheets import result_row
     if not lab.sheets.enabled:
-        sys.exit("foglio non configurato: imposta LAB_SHEETS_URL e LAB_SHEETS_TOKEN (vedi lab/README.md)")
+        sys.exit("foglio non configurato: vedi `sheets:` in matrix.yaml e lab/README.md")
     ids = [r["id"] for r in lab.store.db.execute("SELECT id FROM v_latest ORDER BY id")]
     rows = [r for r in (result_row(lab.store.db, i) for i in ids) if r]
     print(f"invio {len(rows)} risultati e lo stato di {lab.machine['id']}...")

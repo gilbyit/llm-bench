@@ -25,11 +25,11 @@ power:
   cmd: null
   interval_s: 1.0
 
-# Google Sheet con lo stato aggiornato (vedi lab/README.md, "Foglio Google"). URL e token si leggono
-# dalle variabili d'ambiente, oppure da lab/.env (escluso da git). Senza, la copia è disattivata.
+# Google Sheet con lo stato aggiornato (vedi lab/README.md, "Foglio Google"). Si scrive con un
+# account di servizio: il foglio va condiviso con la sua email come Editor. Senza chiave, disattivato.
 sheets:
-  url_env: LAB_SHEETS_URL
-  token_env: LAB_SHEETS_TOKEN
+  sheet_id: 1AzqZmThn0tim7S8LdwgDK09I8G2yt8cTaJ_lJZQ3HYM   # "llm-bench: stato dei test"
+  credentials: google-sa.json   # relativo a lab/; escluso da git. Variabile LAB_SHEET_CREDENTIALS per altro percorso
   log: true                     # copia anche il log nella scheda Log
 
 timeouts:

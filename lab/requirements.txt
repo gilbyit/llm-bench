@@ -1,5 +1,6 @@
 # Orchestratore
 pyyaml>=6
+gspread>=6            # copia dei risultati sul foglio Google (facoltativa)
 # Test pubblici
 lm-eval[api,ifeval]>=0.4.9
 datasets>=3
