@@ -213,7 +213,7 @@ engines:
   llamacpp-native:
     kind: llamacpp
     repo: https://github.com/ggml-org/llama.cpp
-    ref: master                  # fissa un tag (es. b7000) per risultati riproducibili
+    ref: b11255  # era master       # fissa un tag (es. b7000) per risultati riproducibili
     cmake_flags: ["-DGGML_NATIVE=ON", "-DLLAMA_CURL=OFF"]
     # bin_dir: /percorso/llama.cpp/build/bin   # per usare una build esistente (es. quella di Palantir)
   llamacpp-docker:
@@ -223,7 +223,7 @@ engines:
   ik-llamacpp:
     kind: llamacpp
     repo: https://github.com/ikawrakow/ik_llama.cpp
-    ref: main
+    ref: b11255  #era main
     fa_style: switch             # ik usa -fa senza valore
     thinking_off_args: []        # DA VERIFICARE: --reasoning-budget potrebbe mancare
     cmake_flags: ["-DGGML_NATIVE=ON"]

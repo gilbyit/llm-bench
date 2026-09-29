@@ -25,7 +25,7 @@ PATTERNS = {
 
 class KLD(Test):
     kind = "kld"
-    VERSION = "1"
+    VERSION = "2"
     needs_server = False
     needs_tools = True
     default_depends = ("model", "quant", "engine")
@@ -81,7 +81,8 @@ class KLD(Test):
     def run(self, rt):
         bq, bref = self._base_quant(rt)
         if bq == rt.cell["quant"]:
-            return Result({"kld_mean": (0.0, None)}, extra={"base": bq, "note": "è il riferimento"})
+            return Result({}, extra={"base": bq, "note": "è il riferimento: KLD non applicabile"})
+"""            return Result({"kld_mean": (0.0, None)}, extra={"base": bq, "note": "è il riferimento"})"""
         threads = rt.params.get("threads") or rt.lab.machine["physical_cores"]
         tmo = rt.lab.cfg["timeouts"].get("tool_s", 7200)
         metrics = {}
@@ -102,7 +103,8 @@ class KLD(Test):
                 rt.lab.store.save_artifact(key, "kld-base", bref.source, base_file, base_file.stat().st_size,
                                            None, {"base_quant": bq, "corpus": corpus})
             out = rt.engine.tool("perplexity", ["-m", rt.ref.local.resolve(), "--kl-divergence-base",
-                                                base_file.resolve(), "--kl-divergence", "-t", threads],
+                                                base_file.resolve(), "--kl-divergence",
+                                                "-c", self.cfg.get("ctx", 512), "-t", threads],
                                  rt.log, tmo)
             found = 0
             for name, rx in PATTERNS.items():
@@ -113,4 +115,5 @@ class KLD(Test):
                     metrics[f"{corpus}.{name}"] = (float(mm.group(1)), unit)
             if not found:
                 raise LabError("parse", f"output di llama-perplexity non riconosciuto ({corpus})")
+        metrics["base_is_bf16"] = (1.0 if bq == "BF16" else 0.0, None)
         return Result(metrics, extra={"base": bq, "base_sha": bref.sha256})
