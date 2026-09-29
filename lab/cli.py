@@ -204,7 +204,7 @@ def cmd_export(lab, a):
         m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
         return round(100 * (c - m), 1), round(100 * (c + m), 1)
 
-        for row in db.execute("SELECT run_id, COUNT(correct) n, SUM(correct) k FROM samples "
+    for row in db.execute("SELECT run_id, COUNT(correct) n, SUM(correct) k FROM samples "
                           "WHERE correct IS NOT NULL GROUP BY run_id"):
         lo, hi = wilson(row["k"] or 0, row["n"])
         metrics[row["run_id"]]["ci95_low_pct"] = lo
