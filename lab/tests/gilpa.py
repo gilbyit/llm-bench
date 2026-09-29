@@ -52,6 +52,8 @@ class GilpaIntent(Test):
             cmd += ["--extra-tokens", str(c["extra_tokens"])]
         if rt.params.get("prompt_cache") == "off":
             cmd += ["--cold"]
+        if rt.engine.has_tools:          # solo llama.cpp e derivati capiscono cache_prompt
+            cmd += ["--local"]
         cmd += [str(a) for a in c.get("bench_args", [])]
         out = run_cmd(cmd, rt.log, timeout=rt.lab.cfg["timeouts"].get("test_s", 86400),
                       env={"LAB_KEY": "sk-lab"}, cwd=self.bench_dir)
