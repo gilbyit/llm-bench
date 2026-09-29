@@ -82,7 +82,6 @@ class KLD(Test):
         bq, bref = self._base_quant(rt)
         if bq == rt.cell["quant"]:
             return Result({}, extra={"base": bq, "note": "è il riferimento: KLD non applicabile"})
-"""            return Result({"kld_mean": (0.0, None)}, extra={"base": bq, "note": "è il riferimento"})"""
         threads = rt.params.get("threads") or rt.lab.machine["physical_cores"]
         tmo = rt.lab.cfg["timeouts"].get("tool_s", 7200)
         metrics = {}
