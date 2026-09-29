@@ -109,7 +109,7 @@ class LlamaCpp(Engine):
         if p.get("thinking") == "off":
             a += self.think_off
         if draft is not None:
-            a += ["-md", draft.local, "--draft-max", str(p.get("draft_max", 16)), "--draft-min", "1"]
+            a += ["-md", draft.local, "--spec-draft-n-max", str(p.get("draft_max", 16))]
         a += model_cfg.get("llamacpp_args", []) + self.extra
         return [str(x) for x in a]
 

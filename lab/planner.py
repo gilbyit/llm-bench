@@ -61,6 +61,8 @@ class Planner:
             p["threads_batch"] = None
         if "thinking" not in (model_cfg.get("capabilities") or []):
             p["thinking"] = None
+        if p.get("thinking") == "on" and m.get("thinking") is False:
+            return None, f"thinking disattivato su {m['id']}"
         if p.get("draft") in ("none", None):
             p["draft"] = None
         p = engine.normalize(p)

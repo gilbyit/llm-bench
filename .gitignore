@@ -1,2 +1,8 @@
 models/
 *.gguf
+lab/.venv/
+__pycache__/
+labdata/
+results/lab.sqlite-wal
+results/lab.sqlite-shm
+results/lab.sqlite

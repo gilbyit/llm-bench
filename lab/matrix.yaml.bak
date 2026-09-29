@@ -34,7 +34,6 @@ timeouts:
 machines:
   nasgul:
     hostname: nasgul
-    thinking: false             # circa 3 minuti per comando: inutilizzabile
     max_model_gb: 12            # 16 GB meno sistema e servizi
     # stime grezze per `plan`, da correggere con i primi dati reali
     speed: {tg_gb_per_s: 11, pp_tps_1b: 23}
@@ -68,8 +67,10 @@ quants:
   Q4_0:          {format: gguf, bits: 4.5}
   IQ4_XS:        {format: gguf, bits: 4.3}
   Q3_K_M:        {format: gguf, bits: 3.9}
-  UD-IQ3_XXS:    {format: gguf, bits: 3.3}
-  UD-IQ2_XXS:    {format: gguf, bits: 2.6}
+  IQ3_S:         {format: gguf, bits: 3.4}
+  IQ3_XXS:       {format: gguf, bits: 3.1}
+  Q2_K:          {format: gguf, bits: 2.6}
+  IQ2_XXS:       {format: gguf, bits: 2.1}
   UD-Q4_K_XL:    {format: gguf, bits: 5.0}
   UD-Q3_K_XL:    {format: gguf, bits: 4.0}
   UD-Q2_K_XL:    {format: gguf, bits: 3.0}
@@ -490,7 +491,7 @@ sweeps:
   # §5: scansione delle quantizzazioni
   quant-scan:
     models: [qwen3.5-4b, qwen3.5-0.8b]
-    quants: [BF16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q4_0, IQ4_XS, Q3_K_M, UD-IQ3_XXS, UD-IQ2_XXS,
+    quants: [BF16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q4_0, IQ4_XS, Q3_K_M, IQ3_S, IQ3_XXS, Q2_K, IQ2_XXS,
              UD-Q4_K_XL, UD-Q3_K_XL, UD-Q2_K_XL, Q4_K_M-imat, Q4_K_M-noimat, Q3_K_M-imat, Q3_K_M-noimat]
     engines: [llamacpp-native]
     tests: controllo
@@ -498,7 +499,7 @@ sweeps:
   # §5: meglio grande compresso o piccolo preciso?
   grande-vs-preciso:
     models: [qwen3.5-9b]
-    quants: [Q3_K_M, UD-IQ3_XXS, Q4_K_M]
+    quants: [Q3_K_M, IQ3_S, IQ3_XXS, Q4_K_M]
     engines: [llamacpp-native]
     tests: controllo
 
