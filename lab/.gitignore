@@ -3,3 +3,5 @@ __pycache__/
 models/
 *.gguf
 .env
+google-sa.json
+*-sa.json
