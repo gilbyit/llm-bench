@@ -465,6 +465,11 @@ suites:
 # sweep diversi si eseguono una volta sola. `params` = griglia (prodotto cartesiano),
 # `params_list` = combinazioni esplicite, `params_fixed` = valori fissi.
 sweeps:
+  primo-giro:
+    models: [qwen3.5-4b]
+    quants: [Q4_K_M, Q8_0]
+    engines: [llamacpp-native]
+    tests: controllo
   # §3: tutti i modelli in Q4_K_M con la suite base
   modelli:
     models: all

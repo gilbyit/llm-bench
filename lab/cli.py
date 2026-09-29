@@ -194,6 +194,23 @@ def cmd_export(lab, a):
         if r.get("energy_j") and tok.get(r["id"]):
             metrics[r["id"]]["gen_tokens_per_joule"] = tok[r["id"]] / r["energy_j"]
 
+    import math
+    def wilson(k, n, z=1.96):
+        if not n:
+            return None, None
+        p = k / n
+        d = 1 + z * z / n
+        c = (p + z * z / (2 * n)) / d
+        m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+        return round(100 * (c - m), 1), round(100 * (c + m), 1)
+
+        for row in db.execute("SELECT run_id, COUNT(correct) n, SUM(correct) k FROM samples "
+                          "WHERE correct IS NOT NULL GROUP BY run_id"):
+        lo, hi = wilson(row["k"] or 0, row["n"])
+        metrics[row["run_id"]]["ci95_low_pct"] = lo
+        metrics[row["run_id"]]["ci95_high_pct"] = hi
+        metrics[row["run_id"]]["n_samples"] = row["n"]
+
     def write(name, rows, fields=None):
         if not fields:
             seen = []
