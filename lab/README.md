@@ -133,6 +133,44 @@ SELECT model, quant, file_size_gb, value FROM v_results
 WHERE test='kld' AND metric='wiki_it.kld_mean' ORDER BY model, file_size_gb;
 ```
 
+## Foglio Google (stato in tempo reale)
+
+Il laboratorio può copiare ogni risultato su un Google Sheet appena la cella finisce, così lo stato
+si vede dal telefono senza entrare su NASGUL. Non servono librerie Google né account di servizio:
+il foglio contiene uno script (`lab/sheets_apps_script.gs`) pubblicato come app web, e il
+laboratorio gli manda le righe con un token.
+
+Schede:
+
+| Scheda | Contenuto |
+|---|---|
+| `Stato` | una riga per macchina e sweep (fatte, da fare, errori, % completamento, ore stimate) e una riga "▶ in corso" per macchina con la cella attuale |
+| `Risultati` | una riga per cella, aggiornata in place all'ultimo tentativo: stato, metrica principale, giusti con intervallo di confidenza, tempi, pp/tg, KLD, parametri, errore |
+| `Log` | il log del laboratorio (ultime 3000 righe) |
+
+Installazione, una volta:
+
+1. Nel foglio: *Estensioni > Apps Script*, incolla `lab/sheets_apps_script.gs`, salva.
+2. *Impostazioni progetto > Proprietà dello script*: `LAB_TOKEN` = una stringa lunga a caso
+   (`openssl rand -hex 24`).
+3. Seleziona la funzione `setup` ed eseguila una volta (chiede i permessi).
+4. *Esegui il deployment > Nuovo deployment > App web*, "Esegui come: Me", "Chi può accedere:
+   Chiunque". Copia l'URL che finisce con `/exec`.
+5. Su ogni macchina, in `lab/.env` (escluso da git):
+
+   ```bash
+   LAB_SHEETS_URL=https://script.google.com/macros/s/.../exec
+   LAB_SHEETS_TOKEN=la-stessa-stringa-del-punto-2
+   ```
+
+6. `./lab/lab.sh sync` manda tutto quello che c'è già nel database e verifica il collegamento.
+
+Da lì in poi `run` aggiorna il foglio da solo. L'invio avviene in un thread separato: se Google non
+risponde i test proseguono, e `sync` rimanda tutto in seguito. "Chiunque" vuol dire che l'URL non
+richiede un login, ma senza il token lo script rifiuta la richiesta: non pubblicare l'URL insieme al
+token. Se modifichi lo script: *Gestisci deployment > Modifica > Versione: nuova* (l'URL non cambia).
+NASGUL e Z87 possono scrivere sullo stesso foglio: le righe hanno la macchina nella chiave.
+
 ## matrix.yaml
 
 - `models`: nell'ordine di esecuzione. `sources.gguf.repo` è il repo Hugging Face; il file si

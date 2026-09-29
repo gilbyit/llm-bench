@@ -8,6 +8,7 @@
   errors      elenco degli errori con classe e log
   invalidate  segna come da rifare le celle che corrispondono ai filtri
   export      esporta CSV (run, metriche lunghe e larghe, campioni, errori)
+  sync        rimanda al Google Sheet tutti i risultati e lo stato (vedi `sheets:` in matrix.yaml)
 """
 from __future__ import annotations
 
@@ -127,6 +128,8 @@ def cmd_run(lab, a, only_errors=False):
         stats = lab.run(cells, mode)
     except KeyboardInterrupt:
         lab.log("interrotto: le celle completate restano salvate, rilancia per proseguire")
+        lab.sheet_status("fermo: interrotto")
+        lab.sheets.close()
         sys.exit(130)
     lab.log(f"fine: {stats}")
 
@@ -245,6 +248,20 @@ def cmd_export(lab, a):
     print("\nPer analisi più libere il database SQLite è", lab.db_path, "(viste v_latest, v_results, v_errors)")
 
 
+def cmd_sync(lab, a):
+    from .sheets import result_row
+    if not lab.sheets.enabled:
+        sys.exit("foglio non configurato: imposta LAB_SHEETS_URL e LAB_SHEETS_TOKEN (vedi lab/README.md)")
+    ids = [r["id"] for r in lab.store.db.execute("SELECT id FROM v_latest ORDER BY id")]
+    rows = [r for r in (result_row(lab.store.db, i) for i in ids) if r]
+    print(f"invio {len(rows)} risultati e lo stato di {lab.machine['id']}...")
+    for i in range(0, len(rows), 500):
+        lab.sheets._send({"op": "upsert", "sheet": "Risultati", "key": "cella", "rows": rows[i:i + 500]}, tries=2)
+    lab.sheet_status("fermo" if a.idle else None)
+    lab.sheets.close(120)
+    print("fatto")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="lab", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", default=str(LAB_DIR / "matrix.yaml"))
@@ -289,6 +306,9 @@ def main(argv=None):
     p.add_argument("--out", default=str(LAB_DIR.parent / "results" / "export"))
     p.add_argument("--history", action="store_true", help="include tutti i tentativi, non solo l'ultimo")
 
+    p = sub.add_parser("sync")
+    p.add_argument("--idle", action="store_true", help="segna la macchina come ferma nella riga 'in corso'")
+
     a = ap.parse_args(argv)
     import signal
 
@@ -320,6 +340,8 @@ def main(argv=None):
         cmd_invalidate(lab, a)
     elif a.cmd == "export":
         cmd_export(lab, a)
+    elif a.cmd == "sync":
+        cmd_sync(lab, a)
 
 
 if __name__ == "__main__":

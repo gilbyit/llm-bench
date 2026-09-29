@@ -80,6 +80,7 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
+        self.on_finish = None           # callback(run_id): usata per copiare i risultati sul foglio
 
     # --- macchine, artefatti, motori -------------------------------------------------------
     def save_machine(self, mid: str, info: dict):
@@ -154,6 +155,11 @@ class Store:
         except Exception:
             self.db.execute("ROLLBACK")
             raise
+        if self.on_finish:
+            try:
+                self.on_finish(run_id)
+            except Exception:
+                pass                    # il foglio non deve mai fermare un test
 
     def record(self, cell, status, fp=None, resolved=None, **kw) -> int:
         rid = self.start_run(cell, fp, resolved or {})

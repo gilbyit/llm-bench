@@ -25,6 +25,13 @@ power:
   cmd: null
   interval_s: 1.0
 
+# Google Sheet con lo stato aggiornato (vedi lab/README.md, "Foglio Google"). URL e token si leggono
+# dalle variabili d'ambiente, oppure da lab/.env (escluso da git). Senza, la copia è disattivata.
+sheets:
+  url_env: LAB_SHEETS_URL
+  token_env: LAB_SHEETS_TOKEN
+  log: true                     # copia anche il log nella scheda Log
+
 timeouts:
   server_start_s: 900           # qwen3.5-4b a freddo ~130 s su NASGUL; i 9B molto di più
   request_s: 1800

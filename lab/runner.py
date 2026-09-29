@@ -15,6 +15,7 @@ from . import engines as engines_mod
 from . import tests as tests_mod
 from .artifacts import Artifacts
 from .planner import Planner
+from .sheets import SheetSync, result_row, running_row, status_rows
 from .store import Store
 from .sysinfo import Monitor, detect_machine, meminfo_gb
 from .tests.base import RunCtx
@@ -60,14 +61,36 @@ class Lab:
         self.main_log = self.data_dir / "logs" / f"lab-{time.strftime('%Y%m%d')}.log"
         self.main_log.parent.mkdir(parents=True, exist_ok=True)
         self._ev_cache = {}
+        self.sheets = SheetSync(self.cfg.get("sheets"), mid, log_fn=self._log_local)
+        if self.sheets.enabled:
+            self.store.on_finish = self._sheet_result
+
+    def _sheet_result(self, run_id):
+        row = result_row(self.store.db, run_id)
+        if row:
+            self.sheets.upsert("Risultati", "cella", [row])
+
+    def sheet_status(self, activity=None):
+        """Aggiorna la scheda Stato (conteggi per sweep) e, se data, la riga "in corso"."""
+        if not self.sheets.enabled:
+            return
+        rows = status_rows(self)
+        if activity is not None:
+            rows.append(running_row(self, activity))
+        self.sheets.upsert("Stato", "chiave", rows)
 
     # --- utilità ---------------------------------------------------------------------------
-    def log(self, msg: str):
+    def _log_local(self, msg: str):
         line = f"[{now()}] {msg}"
         if not self.quiet:
             print(line, flush=True)
         with open(self.main_log, "a", encoding="utf-8") as f:
             f.write(line + "\n")
+
+    def log(self, msg: str):
+        self._log_local(msg)
+        if getattr(self, "sheets", None):
+            self.sheets.log(msg)
 
     def expand_tests(self, spec) -> list[str]:
         suites = self.cfg.get("suites", {})
@@ -180,6 +203,8 @@ class Lab:
         if n_int:
             self.log(f"{n_int} esecuzioni rimaste a metà da un giro precedente segnate come 'interrupted'")
         stats = {"ok": 0, "error": 0, "skipped": 0, "done_before": 0}
+        if not mode.get("dry"):
+            self.sheet_status("avvio")
         # 1) celle non eseguibili: registrate una volta, con il motivo
         runnable = []
         for c in cells:
@@ -213,6 +238,10 @@ class Lab:
             if not self.cfg.get("keep_models", True):
                 for ref in downloaded:
                     self.artifacts.delete_local(ref)
+            if not mode.get("dry"):
+                self.sheet_status(f"finito {mid}")
+        if not mode.get("dry"):
+            self.sheet_status("fermo: giro concluso")
         return stats
 
     def _fail_all(self, cells, e: LabError, stats, ref=None):
@@ -355,6 +384,8 @@ class Lab:
         rt = RunCtx(c, eng, ref, m, params or c["params"], log, work, srv, self)
         label = f"{c['model'] or 'macchina'} {c['quant'] or ''} {c['engine'] or ''} {c['test']}"
         self.log(f"    ▶ {label} (run {rid})")
+        if self.sheets.enabled:
+            self.sheets.upsert("Stato", "chiave", [running_row(self, f"{label} {json.dumps(c['params'])} (dalle {now()[11:16]})")])
         t0 = time.monotonic()
         pid_fn = srv.pid_fn if srv else (lambda: None)
         mon = Monitor(pid_fn, self.power_cmd, (self.cfg.get("power") or {}).get("interval_s", 1.0))
