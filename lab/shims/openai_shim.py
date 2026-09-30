@@ -7,6 +7,7 @@ Sperimentale: non collaudato su NASGUL/Z87.
 """
 import argparse
 import json
+import sys
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -40,12 +41,15 @@ else:
     import onnxruntime_genai as og
     from huggingface_hub import snapshot_download
     import os
-    path = a.model if os.path.isdir(a.model) else snapshot_download(a.model)
-    # i repo ONNX hanno spesso sottocartelle per variante: si usa la prima con genai_config.json
-    for root, _, files in os.walk(path):
-        if "genai_config.json" in files:
-            path = root
-            break
+    # i repo ONNX hanno sottocartelle per variante (cpu_and_mobile/..., gpu/...): si scarica e si usa
+    # solo quella per CPU, altrimenti os.walk può prendere la variante GPU e og.Model fallisce
+    path = a.model if os.path.isdir(a.model) else snapshot_download(
+        a.model, allow_patterns=["cpu*/**", "*.json", "*.py", "*.txt"])
+    found = sorted(root for root, _, files in os.walk(path) if "genai_config.json" in files)
+    if not found:
+        sys.exit(f"nessun genai_config.json in {path}")
+    path = next((r for r in found if "cpu" in r.lower()), found[0])
+    print(f"variante ONNX: {path}", flush=True)
     model = og.Model(path)
     tok = og.Tokenizer(model)
     from transformers import AutoTokenizer
@@ -92,7 +96,15 @@ class H(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
         if body.get("tools") or body.get("response_format"):
             pass  # ignorati: nessuna grammatica in questi runtime
-        text, p, g, dt = generate(body["messages"], int(body.get("max_tokens", 256)), float(body.get("temperature", 0)))
+        try:
+            text, p, g, dt = generate(body["messages"], int(body.get("max_tokens", 256)),
+                                      float(body.get("temperature", 0)))
+        except Exception:
+            import traceback
+            tb = traceback.format_exc()
+            print(tb, flush=True)       # finisce nel log del server
+            self._send(500, {"error": {"message": tb[-2000:]}})
+            return
         self._send(200, {"choices": [{"message": {"role": "assistant", "content": text}, "finish_reason": "stop"}],
                          "usage": {"prompt_tokens": p, "completion_tokens": g},
                          "timings": {"prompt_n": p, "predicted_n": g,

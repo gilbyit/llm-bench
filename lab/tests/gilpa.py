@@ -6,10 +6,16 @@ si ripete solo questo test, su tutte le combinazioni.
 """
 from __future__ import annotations
 
+import contextlib
 import csv
+import json
 import re
 import statistics
 import sys
+import threading
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from ..util import LabError, run_cmd, sha256_file
@@ -21,6 +27,58 @@ def _num(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+@contextlib.contextmanager
+def _body_proxy(base_url: str, extra: dict):
+    """bench.py costruisce da sé il corpo delle richieste e non conosce i campi specifici del motore
+    (es. think=false per Ollama, stop per llamafile). Se il motore ne dichiara, bench.py parla con
+    questo proxy locale, che li aggiunge a ogni POST e inoltra tutto al server vero."""
+    if not extra:
+        yield base_url
+        return
+    target = base_url.rstrip("/")
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def _forward(self, method, data=None):
+            req = urllib.request.Request(target + self.path, data=data, method=method,
+                                         headers={"Content-Type": "application/json",
+                                                  "Authorization": self.headers.get("Authorization", "")})
+            try:
+                with urllib.request.urlopen(req, timeout=86400) as r:
+                    code, body = r.status, r.read()
+            except urllib.error.HTTPError as e:
+                code, body = e.code, e.read()
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            self._forward("GET")
+
+        def do_POST(self):
+            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)) or 0)
+            try:
+                body = json.loads(raw or b"{}")
+                body.update(extra)
+                raw = json.dumps(body).encode()
+            except ValueError:
+                pass
+            self._forward("POST", raw)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        yield f"http://127.0.0.1:{srv.server_address[1]}"
+    finally:
+        srv.shutdown()
+        srv.server_close()
 
 
 class GilpaIntent(Test):
@@ -44,8 +102,14 @@ class GilpaIntent(Test):
             raise LabError("missing_data", f"bench.py non trovato in {self.bench_dir} (paths.bench_dir)")
 
     def _one(self, rt, label, idx):
+        # llama.cpp riceve già tutto da bench.py (--local, --cold): il proxy serve solo agli altri motori
+        extra = {} if rt.engine.has_tools else rt.server.extra_body
+        with _body_proxy(rt.server.base_url, extra) as url:
+            return self._one_at(rt, label, url)
+
+    def _one_at(self, rt, label, base_url):
         c = self.cfg
-        cmd = [sys.executable, self.bench_dir / "bench.py", "--base-url", rt.server.base_url,
+        cmd = [sys.executable, self.bench_dir / "bench.py", "--base-url", base_url,
                "--model", rt.server.model_name, "--api-key-env", "LAB_KEY", "--label", label,
                "--tasks", ",".join(c.get("tasks", ["intent_v3"]))]
         if c.get("extra_tokens") is not None:

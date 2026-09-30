@@ -230,14 +230,16 @@ engines:
   ik-llamacpp:
     kind: llamacpp
     repo: https://github.com/ikawrakow/ik_llama.cpp
-    ref: b11255  #era main
+    ref: main                    # b11255 è un tag di llama.cpp: in ik_llama.cpp non esiste e il checkout fallisce
     fa_style: switch             # ik usa -fa senza valore
     thinking_off_args: []        # DA VERIFICARE: --reasoning-budget potrebbe mancare
     cmake_flags: ["-DGGML_NATIVE=ON"]
   ollama:
     kind: ollama
     image: ollama/ollama:latest
-    thinking_off_body: {think: false}   # DA VERIFICARE sull'endpoint /v1
+    # /v1 ignora "think": l'equivalente OpenAI è reasoning_effort. Arriva a bench.py tramite il proxy
+    # del test gilpa. Verificato con curl su NASGUL? (vedi note): se "none" non è accettato, usare /api/chat
+    thinking_off_body: {reasoning_effort: "none"}
   koboldcpp:
     kind: generic
     formats: [gguf]
@@ -259,8 +261,9 @@ engines:
     kind: generic
     formats: [gguf]
     download:
-      url: https://github.com/Mozilla-Ocho/llamafile/releases/download/0.9.3/llamafile-0.9.3  # DA VERIFICARE
-      file: llamafile
+      url: https://github.com/mozilla-ai/llamafile/releases/download/0.10.5/llamafile-0.10.5  # 0.9.3 non carica qwen3.5
+      file: llamafile-0.10.5         # nome nuovo: prepare scarica la nuova versione
+    request_extra: {stop: ["<|end|>"]}   # phi4: senza template corretto <|end|> finisce nel JSON
     cmd: ["sh", "{bin}", "--server", "--nobrowser", "-m", "{model}", "--host", "127.0.0.1", "--port", "{port}"]
     supported_params: [threads, ctx, fa]
     param_args:
@@ -308,7 +311,14 @@ engines:
     fa_style: switch
     jinja: false
     thinking_off_args: []
-    cmake_flags: ["-DBITNET_X86_TL2=OFF"]   # DA VERIFICARE: la build ufficiale passa da setup_env.py
+    # Il prodotto I2_S su x86 esiste solo in AVX2 (src/ggml-bitnet-mad.cpp): su NASGUL non si può.
+    requires_cpu: [avx2]
+    # setup_env.py genera include/bitnet-lut-kernels.h prima di compilare, e vuole clang. Serve numpy
+    # per il python di sistema (apt install clang python3-numpy).
+    pre_build:
+      - ["python3", "utils/codegen_tl2.py", "--model", "bitnet_b1_58-3B", "--BM", "160,320,320",
+         "--BK", "96,96,96", "--bm", "32,32,32"]
+    cmake_flags: ["-DBITNET_X86_TL2=OFF", "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++"]
   mock:
     enabled: false
     kind: generic
