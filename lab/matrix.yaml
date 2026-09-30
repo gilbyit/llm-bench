@@ -563,6 +563,18 @@ sweeps:
     engines: [llamacpp-native]
     tests: [gilpa_stability]
 
+  # Test pubblici corti anche su NASGUL, per tutti i modelli già provati col test intenti.
+  # `run_on` scavalca il vincolo `machines` dei test (quality_machines) solo per questo sweep.
+  # Sulla Z87 le stesse celle esistono già nello sweep `modelli` e non vengono ripetute.
+  # Stima NASGUL: ~40 h in tutto (da ~0,7 h per qwen3.5-0.8b a ~7 h per qwen3.5-9b).
+  pubblici-nasgul:
+    models: [qwen3.5-0.8b, llama3.2-1b, lfm2.5-1.2b, lfm2.5-8b-a1b, qwen3.5-2b, gemma4-e2b, minicpm5-2b,
+             smollm3-3b, ministral3-3b, phi4-mini, qwen3-4b-2507, qwen3.5-4b, gemma4-e4b, qwen3.5-9b]
+    quants: [Q4_K_M]
+    engines: [llamacpp-native]
+    run_on: [nasgul]
+    tests: [belebele_it, belebele_en, bfcl, json_grammar]
+
   # Tutto per tutto: prodotto cartesiano completo. Disabilitato: `plan --sweep tutto` per il costo.
   tutto:
     enabled: false

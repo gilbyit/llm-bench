@@ -74,8 +74,10 @@ class Test:
     def prepare(self, log: Path):
         pass
 
-    def applicable(self, machine: dict, model_cfg: dict | None, quant_id: str | None, engine) -> str | None:
-        if self.cfg.get("machines") and machine["id"] not in self.cfg["machines"]:
+    def applicable(self, machine: dict, model_cfg: dict | None, quant_id: str | None, engine,
+                   ignore_machines: bool = False) -> str | None:
+        # ignore_machines: lo sweep chiede di eseguire il test anche fuori da `machines` (vedi `run_on`)
+        if not ignore_machines and self.cfg.get("machines") and machine["id"] not in self.cfg["machines"]:
             return f"{self.name} previsto solo su {', '.join(self.cfg['machines'])}"
         if self.level == "machine":
             return None

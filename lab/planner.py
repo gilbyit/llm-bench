@@ -88,13 +88,15 @@ class Planner:
             if not sweeps and not sw.get("enabled", True) and not include_disabled:
                 continue
             tests = [t for t in lab.expand_tests(sw.get("tests", "base")) if t in lab.tests]
+            # run_on: macchine su cui questo sweep esegue i suoi test anche se il test è limitato ad altre
+            ign = lab.machine["id"] in (sw.get("run_on") or [])
             machine_tests = [t for t in tests if lab.tests[t].level == "machine"]
             model_tests = [t for t in tests if lab.tests[t].level != "machine"]
             for t in machine_tests:
                 test = lab.tests[t]
                 cell = {"sweep": sname, "machine": lab.machine["id"], "model": None, "quant": None, "engine": None,
                         "params": {}, "test": t, "test_opts": test.options()}
-                reason = test.applicable(lab.machine, None, None, None)
+                reason = test.applicable(lab.machine, None, None, None, ign)
                 self._add(cells, seen, cell, test, reason)
             for mid in _as_list(sw.get("models"), models):
                 if mid not in cfg["models"]:
@@ -137,7 +139,7 @@ class Planner:
                                 test = lab.tests[t]
                                 cell = {"sweep": sname, "machine": lab.machine["id"], "model": mid, "quant": qid,
                                         "engine": eid, "params": params, "test": t, "test_opts": test.options()}
-                                reason = ereason or preason or test.applicable(lab.machine, m, qid, eng)
+                                reason = ereason or preason or test.applicable(lab.machine, m, qid, eng, ign)
                                 self._add(cells, seen, cell, test, reason)
         order_m = {m: i for i, m in enumerate(cfg["models"])}
         order_q = {q: i for i, q in enumerate(cfg["quants"])}
@@ -154,6 +156,8 @@ class Planner:
         if prev is not None:
             if cell["sweep"] not in prev["sweep"].split(","):
                 prev["sweep"] += "," + cell["sweep"]
+            if prev["skip_reason"] and not reason:
+                prev["skip_reason"] = None  # basta uno sweep che la rende eseguibile
             return
         seen[cell["logical_key"]] = cell
         cells.append(cell)

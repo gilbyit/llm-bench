@@ -70,8 +70,8 @@ class KLD(Test):
                 return q, ref
         raise LabError("unsupported", "nessun riferimento (BF16/Q8_0) entra in RAM")
 
-    def applicable(self, machine, model_cfg, quant_id, engine):
-        r = super().applicable(machine, model_cfg, quant_id, engine)
+    def applicable(self, machine, model_cfg, quant_id, engine, ignore_machines=False):
+        r = super().applicable(machine, model_cfg, quant_id, engine, ignore_machines)
         if r:
             return r
         if quant_id in ("BF16", "F16"):
