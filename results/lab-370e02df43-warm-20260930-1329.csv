@@ -1,0 +1,39 @@
+label,task,case,rep,json_ok,correct,entities_ok,clean,wall_s,prompt_tokens,prompt_tps,gen_tokens,gen_tps,error,output
+lab-370e02df43,intent_v3,i01,0,0,0,,,72.43,741,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i02,0,0,0,,,73.17,752,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i03,0,0,0,,,74.12,763,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i04,0,1,1,0,1,25.06,755,,200,,,"{""intent"":""add_component"",""shop"":""Amazon"" }"
+lab-370e02df43,intent_v3,i05,0,0,0,,,72.37,743,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i06,0,0,0,,,72.64,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i07,0,0,0,,,72.72,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i08,0,1,1,0,1,38.6,747,,325,,,"{""intent"":""log_activity"",""category"":""gaming"",""item"":""Elden Ring""}"
+lab-370e02df43,intent_v3,i09,0,0,0,,,72.74,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i10,0,0,0,,,72.52,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i11,0,0,0,,,72.61,744,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i12,0,0,0,,,73.31,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i13,0,0,0,,,72.57,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i14,0,1,1,1,1,18.53,754,,146,,,"{""intent"":""shop_list"",""shop"":""Amazon""}"
+lab-370e02df43,intent_v3,i15,0,1,1,1,1,25.71,744,,214,,,"{""intent"":""shop_list"",""shop"":""Leroy Merlin""}"
+lab-370e02df43,intent_v3,i16,0,0,0,,,72.32,743,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i17,0,0,0,,,74.19,765,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i18,0,0,0,,,73.71,760,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i19,0,1,1,0,1,48.47,755,,404,,,"{""intent"":""add_component"",""shop"":""Amazon"" }"
+lab-370e02df43,intent_v3,i20,0,0,0,,,73.01,750,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i21,0,0,0,,,72.77,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i22,0,0,0,,,72.46,743,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i23,0,0,0,,,73.25,752,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i24,0,1,1,1,1,51.45,749,,434,,,"{""intent"":""log_activity"",""category"":""cinema"",""item"":""Blade Runner 2049""}"
+lab-370e02df43,intent_v3,i25,0,0,0,,,72.86,749,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i26,0,0,0,,,73.8,749,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i27,0,0,0,,,72.92,748,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i28,0,0,0,,,72.84,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i29,0,0,0,,,72.61,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i30,0,0,0,,,72.59,744,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i31,0,0,0,,,72.34,742,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i32,0,0,0,,,72.63,744,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i33,0,0,0,,,72.79,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i34,0,0,0,,,72.58,747,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i35,0,0,0,,,72.61,746,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i36,0,1,1,1,1,65.64,745,,561,,,"{""intent"":""shop_list"",""shop"":""Leroy Merlin""}"
+lab-370e02df43,intent_v3,i37,0,0,0,,,72.34,743,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
+lab-370e02df43,intent_v3,i38,0,0,0,,,72.65,745,,620,,JSONDecodeError: Expecting value: line 1 column 1 (char 0),
