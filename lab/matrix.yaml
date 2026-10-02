@@ -231,6 +231,9 @@ engines:
     kind: llamacpp
     repo: https://github.com/ikawrakow/ik_llama.cpp
     ref: main                    # b11255 è un tag di llama.cpp: in ik_llama.cpp non esiste e il checkout fallisce
+    # Senza AVX2 non compila (ggml.c e i kernel iqk presuppongono AVX2 o NEON; lo dice anche il README):
+    # su NASGUL è incompatibile, gira solo sulla Z87.
+    requires_cpu: [avx2]
     fa_style: switch             # ik usa -fa senza valore
     thinking_off_args: []        # DA VERIFICARE: --reasoning-budget potrebbe mancare
     cmake_flags: ["-DGGML_NATIVE=ON"]
