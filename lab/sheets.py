@@ -23,7 +23,7 @@ import time
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from .util import now
+from .util import brief, now
 
 # Metrica mostrata nella colonna "metrica/valore", in ordine di preferenza (suffisso del nome)
 PRIMARY = ("tutto_giusto_pct", "acc_pct", "compliance_pct", "prompt_acc_pct", "f1", "tg_tps", "kld_mean")
@@ -247,7 +247,7 @@ def result_row(db, run_id: int) -> dict | None:
     wall = pick("wall_med_s")[1]
     pp = pick("pp_tps", "prompt_tps_med")[1]
     tg = pick("tg_tps", "gen_tps_med")[1]
-    err = f"{r['error_class']}: {(r['error_msg'] or '').splitlines()[0][:200]}" if r["error_class"] else ""
+    err = f"{r['error_class']}: {brief(r['error_msg'] or '')}" if r["error_class"] else ""
     row = {
         "cella": r["logical_key"],
         "aggiornato": r["finished_at"] or now(),

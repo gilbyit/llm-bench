@@ -19,7 +19,7 @@ from .sheets import SheetSync, result_row, running_row, status_rows
 from .store import Store
 from .sysinfo import Monitor, detect_machine, meminfo_gb
 from .tests.base import RunCtx
-from .util import LabError, h, now
+from .util import LabError, brief, h, now
 
 LAB_DIR = Path(__file__).resolve().parent
 
@@ -145,7 +145,8 @@ class Lab:
                 self._ev_cache.pop(eid, None)
                 report.append(("motore", eid, "ok", self.engine_version(eid)))
             except Exception as e:
-                report.append(("motore", eid, "ERRORE", f"{getattr(e, 'cls', type(e).__name__)}: {str(e)[:200]}"))
+                self.log(f"prepare motore {eid} FALLITO ({getattr(e, 'cls', type(e).__name__)}): {brief(e)}")
+                report.append(("motore", eid, "ERRORE", f"{getattr(e, 'cls', type(e).__name__)}: {brief(e)}"))
         for tid, t in self.tests.items():
             if tests and tid not in tests:
                 continue
@@ -356,7 +357,7 @@ class Lab:
         try:
             srv = self._start_server(eng, ref, m, params, draft, slog)
         except LabError as e:
-            self.log(f"  avvio fallito ({e.cls}): {str(e)[:200]}")
+            self.log(f"  avvio fallito ({e.cls}): {brief(e)}")
             for c, fp, res, _ in plan:
                 self.store.record(c, "error", fp, res, error_class=e.cls, error_msg=str(e), log_path=str(slog))
                 stats["error"] += 1
@@ -413,7 +414,7 @@ class Lab:
             self.store.finish_run(rid, "error", error_class=e.cls, error_msg=str(e), log_path=e.log or str(log),
                                   duration_s=round(time.monotonic() - t0, 1), monitor=mon.snapshot(), extra=extra)
             stats["error"] += 1
-            self.log(f"    ✗ {e.cls}: {str(e)[:200]}")
+            self.log(f"    ✗ {e.cls}: {brief(e)}")
         except Exception as e:
             tb = traceback.format_exc()
             with open(log, "a") as f:

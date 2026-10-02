@@ -263,13 +263,15 @@ engines:
     download:
       url: https://github.com/mozilla-ai/llamafile/releases/download/0.10.5/llamafile-0.10.5  # 0.9.3 non carica qwen3.5
       file: llamafile-0.10.5         # nome nuovo: prepare scarica la nuova versione
-    request_extra: {stop: ["<|end|>"]}   # phi4: senza template corretto <|end|> finisce nel JSON
-    cmd: ["sh", "{bin}", "--server", "--nobrowser", "-m", "{model}", "--host", "127.0.0.1", "--port", "{port}"]
-    supported_params: [threads, ctx, fa]
+    # Dalla 0.10 è un llama-server recente: --nobrowser non esiste più (errore all'avvio), -fa vuole
+    # on|off e il thinking si spegne con --reasoning-budget. --gpu disable evita la ricerca di Vulkan.
+    cmd: ["sh", "{bin}", "--server", "--gpu", "disable", "-m", "{model}", "--host", "127.0.0.1", "--port", "{port}"]
+    supported_params: [threads, ctx, fa, thinking]
     param_args:
       threads: ["-t", "{threads}"]
       ctx: ["-c", "{ctx}"]
-      fa: {"on": ["-fa"], "off": []}
+      fa: {"on": ["-fa", "on"], "off": ["-fa", "off"]}
+      thinking: {"off": ["--reasoning-budget", "0"], "on": []}
   openvino:
     kind: generic
     formats: [openvino]
@@ -295,9 +297,10 @@ engines:
     max_params_b: 2
     cmd: ["{python}", "{lab}/shims/openai_shim.py", "--backend", "transformers", "--model", "{model_repo}",
           "--port", "{port}", "--dtype", "float32"]
-    supported_params: [threads]
+    supported_params: [threads, thinking]
     param_args:
       threads: ["--threads", "{threads}"]
+      thinking: {"off": ["--thinking", "off"], "on": ["--thinking", "on"]}
     prepare_cmds:
       - ["{python}", "-m", "pip", "install", "-q", "torch", "--index-url", "https://download.pytorch.org/whl/cpu"]
       - ["{python}", "-m", "pip", "install", "-q", "transformers", "accelerate"]

@@ -17,6 +17,8 @@ ap.add_argument("--model", required=True, help="repo HF o cartella locale")
 ap.add_argument("--port", type=int, required=True)
 ap.add_argument("--threads", type=int, default=0)
 ap.add_argument("--dtype", default="float32")
+ap.add_argument("--thinking", choices=["on", "off"], default="off",
+                help="passato al template di chat come enable_thinking (i template che non lo usano lo ignorano)")
 a = ap.parse_args()
 
 if a.backend == "transformers":
@@ -25,18 +27,27 @@ if a.backend == "transformers":
     if a.threads:
         torch.set_num_threads(a.threads)
     tok = AutoTokenizer.from_pretrained(a.model)
-    model = AutoModelForCausalLM.from_pretrained(a.model, torch_dtype=getattr(torch, a.dtype))
+    try:
+        model = AutoModelForCausalLM.from_pretrained(a.model, dtype=getattr(torch, a.dtype))
+    except TypeError:   # transformers < 4.56 conosce solo torch_dtype
+        model = AutoModelForCausalLM.from_pretrained(a.model, torch_dtype=getattr(torch, a.dtype))
     model.eval()
 
     def generate(messages, max_tokens, temperature):
-        ids = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+        # transformers 5 restituisce un BatchEncoding (input_ids + attention_mask), non più il tensore:
+        # chiedendolo esplicitamente con return_dict=True il codice vale per entrambe le versioni
+        enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt",
+                                      return_dict=True, enable_thinking=a.thinking == "on")
+        n_in = enc["input_ids"].shape[1]
+        kw = {"max_new_tokens": max_tokens, "do_sample": temperature > 0}
+        if temperature > 0:
+            kw["temperature"] = temperature
         t0 = time.monotonic()
         with torch.no_grad():
-            out = model.generate(ids, max_new_tokens=max_tokens, do_sample=temperature > 0,
-                                 temperature=temperature or None)
+            out = model.generate(**enc, **kw)
         dt = time.monotonic() - t0
-        new = out[0][ids.shape[1]:]
-        return tok.decode(new, skip_special_tokens=True), ids.shape[1], len(new), dt
+        new = out[0][n_in:]
+        return tok.decode(new, skip_special_tokens=True), n_in, len(new), dt
 else:
     import onnxruntime_genai as og
     from huggingface_hub import snapshot_download

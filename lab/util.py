@@ -70,6 +70,16 @@ def classify(text: str, rc: int | None = None) -> str:
     return "error"
 
 
+def brief(msg: str, n: int = 200) -> str:
+    """Prima riga del messaggio più le ultime righe non vuote: nei log dei server la causa sta in fondo,
+    mentre l'inizio è la riga di comando (lunga, e uguale per tutti)."""
+    lines = [l.strip() for l in str(msg).splitlines() if l.strip()]
+    if len(lines) <= 1:
+        return (lines[0] if lines else "")[:n]
+    last = [l for l in lines[1:] if not l.startswith("$ ")][-3:]
+    return f"{lines[0][:n]} | {' / '.join(last)[-2 * n:]}" if last else lines[0][:n]
+
+
 def tail(path: Path, n: int = 4000) -> str:
     try:
         data = Path(path).read_bytes()
