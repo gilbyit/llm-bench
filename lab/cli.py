@@ -164,6 +164,43 @@ def cmd_errors(lab, a):
         print(f"    log: {r['log_path']}")
 
 
+def cmd_prune(lab, a):
+    """Toglie dal database e dal foglio le celle "orfane": quelle che il piano attuale non contiene più
+    (chiave cambiata dopo una modifica a matrix.yaml o al codice). Sono i doppioni e gli errori vecchi."""
+    keys = {c["logical_key"] for c in lab.planner.expand()}
+    rows = [r for r in lab.store.db.execute(
+        "SELECT logical_key, model, quant, engine, test, status, finished_at FROM v_latest WHERE machine=?",
+        (lab.machine["id"],)) if r["logical_key"] not in keys]
+    keep_ok = [r for r in rows if r["status"] == "ok" and not a.all]
+    rows = [r for r in rows if r["status"] != "ok" or a.all]
+    cnt = Counter(r["status"] for r in rows)
+    for r in rows:
+        if r["status"] != "skipped" or a.verbose:
+            print(f"  {r['status']:8} {r['model']} {r['quant']} {r['engine']} {r['test']}  ({(r['finished_at'] or '')[:16]})")
+    print(f"\norfane: {', '.join(f'{k} {v}' for k, v in cnt.items()) or 'nessuna'}"
+          + (f"; {len(keep_ok)} con risultato ok lasciate (--all per toglierle)" if keep_ok else ""))
+    if a.dry or not rows:
+        return
+    ks = [r["logical_key"] for r in rows]
+    db = lab.store.db
+    for i in range(0, len(ks), 400):
+        part = ks[i:i + 400]
+        q = ",".join("?" * len(part))
+        ids = f"SELECT id FROM runs WHERE machine=? AND logical_key IN ({q})"
+        args = [lab.machine["id"], *part]
+        db.execute(f"DELETE FROM metrics WHERE run_id IN ({ids})", args)
+        db.execute(f"DELETE FROM samples WHERE run_id IN ({ids})", args)
+        db.execute(f"DELETE FROM runs WHERE machine=? AND logical_key IN ({q})", args)
+    db.commit()
+    print(f"database: tolte {len(ks)} celle")
+    if lab.sheets.enabled:
+        ok = lab.sheets._send({"op": "delete", "sheet": "Risultati", "key": "cella", "keys": ks,
+                               "where": {"macchina": lab.machine["id"]}}, tries=2)
+        lab.sheet_status()
+        lab.sheets.close(120)
+        print("foglio: righe tolte" if ok else "foglio: cancellazione non riuscita, toglile a mano o riprova")
+
+
 def cmd_invalidate(lab, a):
     w, args = where_clause(a)
     if w == "1=1" and not a.all:
@@ -306,6 +343,11 @@ def main(argv=None):
     p.add_argument("--out", default=str(LAB_DIR.parent / "results" / "export"))
     p.add_argument("--history", action="store_true", help="include tutti i tentativi, non solo l'ultimo")
 
+    p = sub.add_parser("prune", help="toglie da database e foglio le celle che il piano non contiene più")
+    p.add_argument("--dry", action="store_true", help="mostra soltanto cosa toglierebbe")
+    p.add_argument("--all", action="store_true", help="toglie anche le orfane con risultato ok")
+    p.add_argument("--verbose", action="store_true", help="elenca anche le orfane 'skipped'")
+
     p = sub.add_parser("sync")
     p.add_argument("--idle", action="store_true", help="segna la macchina come ferma nella riga 'in corso'")
 
@@ -342,6 +384,8 @@ def main(argv=None):
         cmd_export(lab, a)
     elif a.cmd == "sync":
         cmd_sync(lab, a)
+    elif a.cmd == "prune":
+        cmd_prune(lab, a)
 
 
 if __name__ == "__main__":

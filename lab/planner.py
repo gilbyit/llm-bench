@@ -75,6 +75,14 @@ class Planner:
             return None, "decodifica speculativa prevista solo con llama.cpp"
         return {k: p.get(k) for k in PARAM_ORDER}, None
 
+    def _excluded(self, model, quant, engine, test) -> str | None:
+        """Regole `exclude` della macchina: combinazioni che si è deciso di non eseguire."""
+        for rule in self.lab.machine.get("exclude") or []:
+            if all(val in rule[key] for key, val in (("models", model), ("quants", quant),
+                                                     ("engines", engine), ("tests", test)) if rule.get(key)):
+                return "escluso: " + rule.get("reason", f"regola exclude di {self.lab.machine['id']}")
+        return None
+
     # --- espansione ------------------------------------------------------------------------
     def expand(self, sweeps=None, include_disabled=False) -> list[dict]:
         cfg, lab = self.cfg, self.lab
@@ -139,7 +147,8 @@ class Planner:
                                 test = lab.tests[t]
                                 cell = {"sweep": sname, "machine": lab.machine["id"], "model": mid, "quant": qid,
                                         "engine": eid, "params": params, "test": t, "test_opts": test.options()}
-                                reason = ereason or preason or test.applicable(lab.machine, m, qid, eng, ign)
+                                reason = (ereason or preason or test.applicable(lab.machine, m, qid, eng, ign)
+                                          or self._excluded(mid, qid, eid, t))
                                 self._add(cells, seen, cell, test, reason)
         order_m = {m: i for i, m in enumerate(cfg["models"])}
         order_q = {q: i for i, q in enumerate(cfg["quants"])}

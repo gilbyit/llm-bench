@@ -109,6 +109,29 @@ class _GSheet:
         upd = [{"range": f"A{i + 2}:{last}{i + 2}", "values": [data[i]]} for i in sorted(set(touched))]
         w.batch_update(upd, value_input_option="RAW")
 
+    def delete(self, name, key, keys, where=None):
+        """Cancella le righe la cui colonna `key` è in `keys` (e che rispettano `where`: {colonna: valore})."""
+        w = self.ws(name)
+        vals = w.get_all_values()
+        if not vals or key not in vals[0]:
+            return 0
+        head, keys = vals[0], {str(k) for k in keys}
+        kc = head.index(key)
+        cond = [(head.index(c), str(v)) for c, v in (where or {}).items() if c in head]
+        hit = [i + 2 for i, r in enumerate(vals[1:])
+               if len(r) > kc and r[kc] in keys and all(len(r) > c and r[c] == v for c, v in cond)]
+        # dal fondo, a blocchi contigui: gli indici sopra non si spostano e si usano poche chiamate
+        end = None
+        for i in sorted(hit, reverse=True) + [None]:
+            if end is not None and (i is None or i != start - 1):
+                w.delete_rows(start, end)
+                end = None
+            if i is not None:
+                if end is None:
+                    end = i
+                start = i
+        return len(hit)
+
     def append(self, name, rows):
         w = self.ws(name)
         vals_head = w.row_values(1)
@@ -170,6 +193,8 @@ class SheetSync:
     def _post(self, payload: dict):
         if payload["op"] == "upsert":
             self.gs.upsert(payload["sheet"], payload["key"], payload["rows"])
+        elif payload["op"] == "delete":
+            self.gs.delete(payload["sheet"], payload["key"], payload["keys"], payload.get("where"))
         else:
             self.gs.append(payload["sheet"], payload["rows"])
 

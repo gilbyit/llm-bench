@@ -17,6 +17,7 @@ ap.add_argument("--model", required=True, help="repo HF o cartella locale")
 ap.add_argument("--port", type=int, required=True)
 ap.add_argument("--threads", type=int, default=0)
 ap.add_argument("--dtype", default="float32")
+ap.add_argument("--cache-dir", default="", help="cartella dove scaricare i modelli ONNX come file veri")
 ap.add_argument("--thinking", choices=["on", "off"], default="off",
                 help="passato al template di chat come enable_thinking (i template che non lo usano lo ignorano)")
 a = ap.parse_args()
@@ -54,8 +55,11 @@ else:
     import os
     # i repo ONNX hanno sottocartelle per variante (cpu_and_mobile/..., gpu/...): si scarica e si usa
     # solo quella per CPU, altrimenti os.walk può prendere la variante GPU e og.Model fallisce
+    # local_dir: file veri in una cartella sola. Nella cache di Hugging Face i file sono collegamenti
+    # verso blobs/xx/..., e onnxruntime rifiuta model.onnx.data se "esce" dalla cartella del modello.
+    local = os.path.join(a.cache_dir or os.path.expanduser("~/.cache/gilpa-lab-onnx"), a.model.replace("/", "--"))
     path = a.model if os.path.isdir(a.model) else snapshot_download(
-        a.model, allow_patterns=["cpu*/**", "*.json", "*.py", "*.txt"])
+        a.model, allow_patterns=["cpu*/**", "*.json", "*.py", "*.txt"], local_dir=local)
     found = sorted(root for root, _, files in os.walk(path) if "genai_config.json" in files)
     if not found:
         sys.exit(f"nessun genai_config.json in {path}")

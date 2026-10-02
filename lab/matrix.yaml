@@ -45,6 +45,12 @@ machines:
     max_model_gb: 12            # 16 GB meno sistema e servizi
     # stime grezze per `plan`, da correggere con i primi dati reali
     speed: {tg_gb_per_s: 11, pp_tps_1b: 23}
+    # Combinazioni da non eseguire su questa macchina (restano nel piano come incompatibili, col motivo).
+    # Chiavi facoltative: engines, models, quants, tests. I risultati già misurati non si toccano.
+    exclude:
+      - engines: [llamafile]
+        models: [qwen3.5-2b, qwen3.5-4b]
+        reason: "llamafile senza AVX2 è ~6x più lento di llama.cpp nativo a parità di qualità (misurato su qwen3.5-0.8b e phi4-mini): inutile ripeterlo sui modelli più grandi"
   z87:
     hostname: z87
     max_model_gb: 12
@@ -267,14 +273,15 @@ engines:
       url: https://github.com/mozilla-ai/llamafile/releases/download/0.10.5/llamafile-0.10.5  # 0.9.3 non carica qwen3.5
       file: llamafile-0.10.5         # nome nuovo: prepare scarica la nuova versione
     # Dalla 0.10 è un llama-server recente: --nobrowser non esiste più (errore all'avvio), -fa vuole
-    # on|off e il thinking si spegne con --reasoning-budget. --gpu disable evita la ricerca di Vulkan.
+    # on|off e il thinking si spegne con --reasoning off. --gpu disable evita la ricerca di Vulkan.
     cmd: ["sh", "{bin}", "--server", "--gpu", "disable", "-m", "{model}", "--host", "127.0.0.1", "--port", "{port}"]
     supported_params: [threads, ctx, fa, thinking]
     param_args:
       threads: ["-t", "{threads}"]
       ctx: ["-c", "{ctx}"]
       fa: {"on": ["-fa", "on"], "off": ["-fa", "off"]}
-      thinking: {"off": ["--reasoning-budget", "0"], "on": []}
+      # --reasoning-budget 0 da solo non basta (qwen3.5 ragiona lo stesso e consuma tutti i token)
+      thinking: {"off": ["--reasoning", "off"], "on": ["--reasoning", "on"]}
   openvino:
     kind: generic
     formats: [openvino]
@@ -290,7 +297,8 @@ engines:
   onnx-genai:
     kind: generic
     formats: [onnx]
-    cmd: ["{python}", "{lab}/shims/openai_shim.py", "--backend", "onnx", "--model", "{model_repo}", "--port", "{port}"]
+    cmd: ["{python}", "{lab}/shims/openai_shim.py", "--backend", "onnx", "--model", "{model_repo}", "--port", "{port}",
+          "--cache-dir", "{data}/onnx"]
     supported_params: []
     prepare_cmds: [["{python}", "-m", "pip", "install", "-q", "onnxruntime-genai", "transformers", "huggingface_hub"]]
     version_cmd: ["{python}", "-c", "import onnxruntime_genai as o; print(o.__version__)"]
