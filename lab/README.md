@@ -209,6 +209,24 @@ libero, test intenti) per il Q8_0 di controllo, la scansione delle quantizzazion
 compresso; `motori` (llama-bench, test intenti, JSON con grammatica) per il confronto tra motori,
 perché a parità di pesi i motori cambiano velocità, template e grammatica, non la conoscenza.
 
+### Riduzione dopo il giro NASGUL (ottobre 2026)
+
+Il primo giro completo su NASGUL ha mostrato cosa non serve ripetere:
+
+- **Modelli tolti** (`enabled: false` in `models`, riattivabili): `smollm3-3b`, `llama3.2-1b`,
+  `minicpm5-2b`, `lfm2.5-1.2b`, `lfm2.5-8b-a1b`. Il motivo è accanto a ciascuno.
+- **Rosa**: `modelli` e `controllo-q8` non usano più `models: all` ma l'elenco `rosa`.
+  `phi4-mini` ne resta fuori e serve solo al confronto tra motori.
+- **Quantizzazioni**: `quant-scan` scende da 17 a 6 gradini (Q8_0, Q5_K_M, Q4_K_M, Q3_K_M,
+  IQ4_XS, UD-IQ2_XXS). Le coppie con e senza imatrix passano allo sweep `quant-kld`, che fa solo
+  la KLD. Il BF16 non ha più celle sue: resta il riferimento della KLD.
+- **`json_free` anche su NASGUL**, nello sweep `pubblici-nasgul`: `json_grammar` da solo non
+  distingue i modelli.
+
+I risultati già misurati delle celle tolte restano nel database e nel foglio. `prune` senza
+opzioni toglie solo le righe `skipped` ed `error` rimaste orfane; **`prune --all` cancellerebbe
+anche quei risultati `ok`**, che servono all'articolo come "provati e scartati": non usarlo.
+
 Stima con `plan` (ordine di grandezza): circa 20 ore su NASGUL e 7 giorni sulla Z87. Il piano
 integrale era di 83 giorni su NASGUL. Per un modello in suite base sulla Z87 servono circa 6 ore,
 e i risultati arrivano un modello alla volta.

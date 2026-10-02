@@ -72,6 +72,10 @@ defaults:
 # ---------------------------------------------------------------------------------------------
 # Quantizzazioni. `bits` serve solo per stime e grafici. `make` = prodotta in locale con
 # llama-quantize partendo da `from` (serve per il confronto pulito con/senza imatrix).
+# Questo è il catalogo: una voce resta qui anche se nessuno sweep la usa più, così i risultati
+# già misurati restano leggibili. Dopo il giro NASGUL (ottobre 2026) sono fuori dagli sweep
+# Q6_K, Q4_0, UD-Q4_K_XL, UD-Q3_K_XL, UD-Q2_K_XL e UD-IQ3_XXS; BF16 e le coppie imat/noimat
+# servono solo alla KLD (sweep `quant-kld`). Motivi accanto allo sweep `quant-scan`.
 quants:
   BF16:          {format: gguf, bits: 16}
   Q8_0:          {format: gguf, bits: 8.5}
@@ -159,6 +163,7 @@ models:
       gguf: {repo: unsloth/Phi-4-mini-instruct-GGUF}
       onnx: {repo: microsoft/Phi-4-mini-instruct-onnx}
   smollm3-3b:
+    enabled: false               # tolto dopo il giro NASGUL (ottobre 2026): 31/38 sugli intenti, BFCL 50%, nulla che phi4-mini non mostri
     family: smollm3
     params_b: 3
     capabilities: [thinking]
@@ -170,6 +175,7 @@ models:
     sources:
       gguf: {repo: unsloth/Llama-3.2-3B-Instruct-GGUF}
   llama3.2-1b:
+    enabled: false               # tolto dopo il giro NASGUL (ottobre 2026): 22/38, superato da qwen3.5-0.8b Q8_0 (33/38, più veloce)
     family: llama3.2
     params_b: 1.2
     sources:
@@ -180,16 +186,19 @@ models:
     sources:
       gguf: {repo: unsloth/Qwen3-4B-Instruct-2507-GGUF}
   minicpm5-2b:
+    enabled: false               # tolto dopo il giro NASGUL (ottobre 2026): 21/38 sugli intenti, JSON con grammatica 26%
     family: minicpm5
     params_b: 2
     sources:
       gguf: {repo: openbmb/MiniCPM5-2B-GGUF}         # DA VERIFICARE
   lfm2.5-1.2b:
+    enabled: false               # tolto dopo il giro NASGUL (ottobre 2026): 14/38, e la prompt cache non aggancia (20 s a comando)
     family: lfm2.5
     params_b: 1.2
     sources:
       gguf: {repo: LiquidAI/LFM2.5-1.2B-Instruct-GGUF}  # DA VERIFICARE
   lfm2.5-8b-a1b:
+    enabled: false               # tolto dopo il giro NASGUL (ottobre 2026): 25/38, 24,6 s a comando per lo stesso difetto di cache
     family: lfm2.5
     params_b: 8.3
     active_params_b: 1.5
@@ -492,6 +501,15 @@ suites:
   completa: [base, gilpa_sql, gsm8k]
 
 # ---------------------------------------------------------------------------------------------
+# Rosa: i modelli che fanno la suite completa (`modelli`) e il controllo Q8_0. Resta fuori
+# phi4-mini, che serve solo al confronto tra motori (è l'unico con il formato ONNX): i suoi
+# test pubblici su NASGUL restano nello sweep `pubblici-nasgul`. I modelli con `enabled: false`
+# non girano comunque. Un modello nuovo va aggiunto qui, altrimenti entra solo negli sweep
+# che lo nominano.
+rosa: &rosa [qwen3.5-4b, qwen3.5-0.8b, qwen3.5-2b, qwen3.5-9b, gemma4-e2b, gemma4-e4b, ministral3-3b,
+             llama3.2-3b, qwen3-4b-2507, bitnet-2b, gpt-oss-20b, velvet-2b]
+
+# ---------------------------------------------------------------------------------------------
 # Sweep: ogni sweep incrocia modelli x quant x motori x parametri x test. Le celle uguali tra
 # sweep diversi si eseguono una volta sola. `params` = griglia (prodotto cartesiano),
 # `params_list` = combinazioni esplicite, `params_fixed` = valori fissi.
@@ -501,16 +519,16 @@ sweeps:
     quants: [Q4_K_M, Q8_0]
     engines: [llamacpp-native]
     tests: controllo
-  # §3: tutti i modelli in Q4_K_M con la suite base
+  # §3: i modelli della rosa in Q4_K_M con la suite base
   modelli:
-    models: all
+    models: *rosa
     quants: [Q4_K_M]
     engines: [llamacpp-native]
     tests: base
 
   # §3: Q8_0 come controllo di qualità, con la suite ridotta
   controllo-q8:
-    models: all
+    models: *rosa
     quants: [Q8_0]
     engines: [llamacpp-native]
     tests: controllo
@@ -523,18 +541,33 @@ sweeps:
     params: {thinking: ["on", "off"]}
     tests: [gilpa_intent, gsm8k]  # con thinking on IFEval genera migliaia di token a caso: escluso
 
-  # §5: scansione delle quantizzazioni
+  # §5: scansione delle quantizzazioni, ridotta da 17 a 6 gradini dopo il giro NASGUL.
+  # Tolte perché non aggiungono informazione (dati qwen3.5-4b, test intenti e llama-bench):
+  #   Q6_K        uguale a Q5_K_M e Q8_0 (38/38, 3,7 t/s)
+  #   Q4_0        formato vecchio, niente in più di Q4_K_M (37/38, 4,05 t/s contro 4,20)
+  #   UD-Q4_K_XL, UD-Q3_K_XL, UD-Q2_K_XL   ricalcano le standard, più pesanti e non più veloci
+  #   UD-IQ3_XXS  la più lenta senza AVX2 (2,6 t/s) e nessun guadagno
+  # Sul 4B il test intenti è saturo (36-38 da 2 bit in su): la qualità si legge sullo 0.8B
+  # (da 3/38 a 33/38) e dalla KLD.
   quant-scan:
     models: [qwen3.5-4b, qwen3.5-0.8b]
-    quants: [BF16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q4_0, IQ4_XS, Q3_K_M, UD-IQ3_XXS, UD-IQ2_XXS,
-             UD-Q4_K_XL, UD-Q3_K_XL, UD-Q2_K_XL, Q4_K_M-imat, Q4_K_M-noimat, Q3_K_M-imat, Q3_K_M-noimat]
+    quants: [Q8_0, Q5_K_M, Q4_K_M, Q3_K_M, IQ4_XS, UD-IQ2_XXS]
     engines: [llamacpp-native]
     tests: controllo
+
+  # §5: con e senza imatrix, solo KLD. Sul test intenti la differenza è rumore (sul 4B vince
+  # imat, sullo 0.8B a Q3 vince noimat): lo strumento giusto è la KLD. Il BF16 non ha celle
+  # sue: è il riferimento della KLD e la base da cui si producono queste quattro.
+  quant-kld:
+    models: [qwen3.5-4b, qwen3.5-0.8b]
+    quants: [Q4_K_M-imat, Q4_K_M-noimat, Q3_K_M-imat, Q3_K_M-noimat]
+    engines: [llamacpp-native]
+    tests: [kld]
 
   # §5: meglio grande compresso o piccolo preciso?
   grande-vs-preciso:
     models: [qwen3.5-9b]
-    quants: [Q3_K_M, UD-IQ3_XXS, Q4_K_M]
+    quants: [Q3_K_M, Q4_K_M]     # UD-IQ3_XXS tolta: 1,4 t/s su NASGUL e 38/38 come le altre
     engines: [llamacpp-native]
     tests: controllo
 
@@ -590,14 +623,15 @@ sweeps:
   # Test pubblici corti anche su NASGUL, per tutti i modelli già provati col test intenti.
   # `run_on` scavalca il vincolo `machines` dei test (quality_machines) solo per questo sweep.
   # Sulla Z87 le stesse celle esistono già nello sweep `modelli` e non vengono ripetute.
-  # Stima NASGUL: ~40 h in tutto (da ~0,7 h per qwen3.5-0.8b a ~7 h per qwen3.5-9b).
+  # json_free aggiunto dopo il primo giro: json_grammar da solo non distingue i modelli (tutti al
+  # 90-98%), serve il confronto con gli stessi casi senza grammatica.
   pubblici-nasgul:
-    models: [qwen3.5-0.8b, llama3.2-1b, lfm2.5-1.2b, lfm2.5-8b-a1b, qwen3.5-2b, gemma4-e2b, minicpm5-2b,
-             smollm3-3b, ministral3-3b, phi4-mini, qwen3-4b-2507, qwen3.5-4b, gemma4-e4b, qwen3.5-9b]
+    models: [qwen3.5-0.8b, qwen3.5-2b, gemma4-e2b, ministral3-3b, phi4-mini, qwen3-4b-2507,
+             qwen3.5-4b, gemma4-e4b, qwen3.5-9b]
     quants: [Q4_K_M]
     engines: [llamacpp-native]
     run_on: [nasgul]
-    tests: [belebele_it, belebele_en, bfcl, json_grammar]
+    tests: [belebele_it, belebele_en, bfcl, json_grammar, json_free]
 
   # Tutto per tutto: prodotto cartesiano completo. Disabilitato: `plan --sweep tutto` per il costo.
   tutto:
