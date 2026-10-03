@@ -58,8 +58,23 @@ class _Gen(Test):
 
 
 class Belebele(_Gen):
+    """Comprensione del testo a scelta multipla.
+
+    Versione 2: la risposta è vincolata ad A, B, C o D con lo schema JSON del motore, come nel test
+    intenti. La versione 1 leggeva la prima lettera isolata in una risposta libera di 8 token: i
+    modelli che ragionano ad alta voce (Gemma 4, MiniCPM5, SmolLM3 in inglese) finivano i token prima
+    di rispondere e prendevano 0, senza che fosse colpa loro. Con il vincolo il risultato misura la
+    scelta del modello, non il suo modo di formattarla, ed è più vicino al metodo ufficiale (che
+    confronta le probabilità delle quattro lettere). `constrained: false` in matrix.yaml riporta alla
+    risposta libera."""
     kind = "belebele"
-    VERSION = "1"
+    VERSION = "2"
+    LETTERS = ("A", "B", "C", "D")
+    SCHEMA = {"type": "json_schema", "json_schema": {"name": "answer", "strict": True, "schema": {
+        "type": "object", "properties": {"answer": {"type": "string", "enum": list(LETTERS)}},
+        "required": ["answer"], "additionalProperties": False}}}
+    JSON_HINT = {"ita_Latn": '\n\nRispondi in JSON: {"answer": "..."}',
+                 "eng_Latn": '\n\nReply in JSON: {"answer": "..."}'}
     PROMPTS = {
         "ita_Latn": ("Leggi il testo e rispondi alla domanda. Rispondi solo con la lettera dell'opzione "
                      "corretta (A, B, C o D).\n\nTesto: {p}\n\nDomanda: {q}\nA) {a}\nB) {b}\nC) {c}\nD) {d}"),
@@ -70,20 +85,47 @@ class Belebele(_Gen):
     def dataset_spec(self):
         return ("facebook/belebele", self.cfg.get("lang", "ita_Latn"), "test")
 
+    @classmethod
+    def parse(cls, text: str) -> str | None:
+        """Lettera scelta: prima dal JSON {"answer": "X"}, poi dalla prima lettera isolata nel testo."""
+        a, b = text.find("{"), text.rfind("}")
+        if 0 <= a < b:
+            try:
+                v = json.loads(text[a:b + 1])
+                v = str(v.get("answer", "")).strip().upper() if isinstance(v, dict) else ""
+                if v[:1] in cls.LETTERS and len(v) == 1:
+                    return v
+            except json.JSONDecodeError:
+                pass
+        m = re.search(r"\b([ABCD])\b", text.upper())
+        return m.group(1) if m else None
+
     def run(self, rt):
-        tpl = self.PROMPTS.get(self.cfg.get("lang", "ita_Latn"), self.PROMPTS["eng_Latn"])
+        lang = self.cfg.get("lang", "ita_Latn")
+        tpl = self.PROMPTS.get(lang, self.PROMPTS["eng_Latn"])
+        constrained = self.cfg.get("constrained", True)
+        hint = self.JSON_HINT.get(lang, self.JSON_HINT["eng_Latn"]) if constrained else ""
 
         def one(cl, it):
             msg = tpl.format(p=it["flores_passage"], q=it["question"], a=it["mc_answer1"], b=it["mc_answer2"],
-                             c=it["mc_answer3"], d=it["mc_answer4"])
-            r = cl.chat([{"role": "user", "content": msg}], max_tokens=self.max_tokens(rt, 8))
-            m = re.search(r"\b([ABCD])\b", r["content"].upper())
+                             c=it["mc_answer3"], d=it["mc_answer4"]) + hint
+            r = cl.chat([{"role": "user", "content": msg}], max_tokens=self.max_tokens(rt, 32 if constrained else 16),
+                        response_format=self.SCHEMA if constrained else None)
+            pred = self.parse(r["content"])
             gold = "ABCD"[int(it["correct_answer_num"]) - 1]
-            return {"case_id": f"{str(it.get('link', ''))[-16:]}:{it.get('question_number')}", "correct": float(bool(m and m.group(1) == gold)),
+            return {"case_id": f"{str(it.get('link', ''))[-16:]}:{it.get('question_number')}",
+                    "correct": float(pred == gold), "pred": pred, "gold": gold,
                     "answer": r["content"][:50], **speed_fields(r)}
 
         samples = self.loop(rt, self.items(), one)
-        return Result({"acc_pct": self.acc(samples), **speed_summary(samples)}, samples)
+        ok = [s for s in samples if not s.get("error")]
+        m = {"acc_pct": self.acc(samples),
+             # risposte da cui non si ricava una lettera: se non è zero il punteggio è da guardare con sospetto
+             "unparsed": (sum(1 for s in ok if s.get("pred") is None), "n"),
+             **speed_summary(samples)}
+        for letter in self.LETTERS:  # una preferenza forte per una lettera è un difetto del modello, non del test
+            m[f"pred_{letter}"] = (sum(1 for s in ok if s.get("pred") == letter), "n")
+        return Result(m, samples)
 
 
 class EvalitaSA(_Gen):

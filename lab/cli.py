@@ -9,6 +9,7 @@
   invalidate  segna come da rifare le celle che corrispondono ai filtri
   export      esporta CSV (run, metriche lunghe e larghe, campioni, errori)
   sync        rimanda al Google Sheet tutti i risultati e lo stato (vedi `sheets:` in matrix.yaml)
+  probe-thinking  prova le opzioni che dovrebbero spegnere il ragionamento di un modello e dice quale funziona
 """
 from __future__ import annotations
 
@@ -285,6 +286,94 @@ def cmd_export(lab, a):
     print("\nPer analisi più libere il database SQLite è", lab.db_path, "(viste v_latest, v_results, v_errors)")
 
 
+# Opzioni candidate per spegnere il ragionamento con llama-server. None = quelle già configurate.
+THINK_VARIANTS = [
+    ("configurazione attuale", None),
+    ("--reasoning off", ["--reasoning", "off"]),
+    ("--reasoning off --reasoning-budget 0", ["--reasoning", "off", "--reasoning-budget", "0"]),
+    ("--chat-template-kwargs enable_thinking=false", ["--chat-template-kwargs", '{"enable_thinking": false}']),
+    ("nessuna opzione (ragionamento acceso, per confronto)", []),
+]
+THINK_PROMPTS = [
+    ("Leggi il testo e rispondi alla domanda. Rispondi solo con la lettera dell'opzione corretta "
+     "(A, B, C o D).\n\nTesto: Il treno per Torino parte alle 9 dal binario 4. Chi arriva dopo le 9 deve "
+     "aspettare quello delle 11, che parte dal binario 2.\n\nDomanda: Da quale binario parte il treno "
+     "delle 11?\nA) 4\nB) 9\nC) 2\nD) 11"),
+    "Qual è la capitale della Francia? Rispondi con una sola parola.",
+]
+
+
+def cmd_probe_thinking(lab, a):
+    """Avvia il modello una volta per ogni opzione candidata e fa due domande a risposta brevissima.
+    Se il modello ragiona lo si vede subito: testo lungo, token consumati, oppure `reasoning` pieno.
+    Non scrive nulla nel database né sul foglio."""
+    from .util import LabError
+    mid, qid, eid = a.model, a.quant, a.engine
+    if mid not in lab.cfg["models"]:
+        sys.exit(f"modello '{mid}' non definito in matrix.yaml")
+    m = lab.cfg["models"][mid]
+    eng = lab.engines.get(eid)
+    if eng is None or eng.kind != "llamacpp":
+        sys.exit(f"probe-thinking funziona solo con i motori di tipo llamacpp (richiesto: {eid})")
+    try:
+        ref = lab.artifacts.resolve(mid, qid)
+        lab.artifacts.ensure(ref, lab.log, lab.quantize_fn())
+    except LabError as e:
+        sys.exit(f"modello non disponibile ({e.cls}): {e}")
+    params, reason = lab.planner._concrete({**lab.cfg["defaults"]["params"], "thinking": "off"}, eng, m)
+    if params is None:
+        sys.exit(f"parametri non applicabili: {reason}")
+    params["thinking"] = "off"   # anche se il modello non dichiara la capability: è proprio ciò che si prova
+    logd = lab.data_dir / "logs" / "probe"
+    logd.mkdir(parents=True, exist_ok=True)
+    results = []
+    for i, (label, args) in enumerate(THINK_VARIANTS):
+        mc = dict(m) if args is None else {**m, "thinking_off_args": args}
+        used = list(mc.get("thinking_off_args", eng.think_off))
+        shown = " ".join(used) or "(nessuna)"
+        print(f"\n[{i + 1}/{len(THINK_VARIANTS)}] {label}: {shown}", flush=True)
+        log = logd / f"{mid}-{qid}-{i}.log"
+        try:
+            srv = lab._start_server(eng, ref, mc, params, None, log)
+        except LabError as e:
+            print(f"    il server non parte ({e.cls}): opzione non accettata da questa build? Log: {log}")
+            results.append((label, used, None))
+            continue
+        thinks = False
+        try:
+            cl = srv.client(timeout=lab.cfg["timeouts"].get("request_s", 1800))
+            for prompt in THINK_PROMPTS:
+                try:
+                    r = cl.chat([{"role": "user", "content": prompt}], max_tokens=a.max_tokens, stream=False)
+                except Exception as e:
+                    print(f"    richiesta fallita: {type(e).__name__}: {e}")
+                    thinks = None
+                    break
+                ntok = (r.get("timings") or {}).get("predicted_n", (r.get("usage") or {}).get("completion_tokens"))
+                long_answer = bool(ntok and ntok > a.short_tokens)
+                reasoning = len(r.get("reasoning") or "")
+                thinks = thinks or long_answer or reasoning > 0
+                print(f"    token {ntok}, reasoning {reasoning} caratteri, fine={r.get('finish_reason')}, "
+                      f"risposta: {r['content'][:90]!r}")
+        finally:
+            srv.stop()
+        results.append((label, used, thinks))
+    print("\nEsito:")
+    for label, used, thinks in results:
+        verdict = "non parte" if thinks is None else ("RAGIONA" if thinks else "spento")
+        print(f"  {verdict:10} {label}")
+    good = [(label, used) for label, used, thinks in results if thinks is False and used]
+    if results and results[0][2] is False:
+        print("\nLa configurazione attuale spegne già il ragionamento: non c'è nulla da cambiare.")
+    elif good:
+        print(f"\nPer usarla: in matrix.yaml, sotto models.{mid}, scrivi\n"
+              f"    thinking_off_args: {json.dumps(good[0][1], ensure_ascii=False)}\n"
+              "poi ripeti i test a risposta libera di quel modello con `run --force`.")
+    else:
+        print("\nNessuna opzione spegne il ragionamento con questa build: per questo modello restano "
+              "affidabili solo i test a risposta vincolata (intenti, Belebele, JSON con grammatica).")
+
+
 def cmd_sync(lab, a):
     from .sheets import result_row
     if not lab.sheets.enabled:
@@ -348,6 +437,14 @@ def main(argv=None):
     p.add_argument("--all", action="store_true", help="toglie anche le orfane con risultato ok")
     p.add_argument("--verbose", action="store_true", help="elenca anche le orfane 'skipped'")
 
+    p = sub.add_parser("probe-thinking", help="prova le opzioni per spegnere il ragionamento di un modello")
+    p.add_argument("--model", required=True)
+    p.add_argument("--quant", default="Q4_K_M")
+    p.add_argument("--engine", default="llamacpp-native")
+    p.add_argument("--max-tokens", type=int, default=96, help="tetto di token per risposta (default 96)")
+    p.add_argument("--short-tokens", type=int, default=16,
+                   help="oltre questi token una risposta a domanda secca conta come ragionamento (default 16)")
+
     p = sub.add_parser("sync")
     p.add_argument("--idle", action="store_true", help="segna la macchina come ferma nella riga 'in corso'")
 
@@ -386,6 +483,8 @@ def main(argv=None):
         cmd_sync(lab, a)
     elif a.cmd == "prune":
         cmd_prune(lab, a)
+    elif a.cmd == "probe-thinking":
+        cmd_probe_thinking(lab, a)
 
 
 if __name__ == "__main__":

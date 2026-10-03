@@ -196,7 +196,7 @@ NASGUL fa llama-bench e il test intenti, che misura qualità e latenza reale ins
 | `json_free` / `json_grammar` | formato | JSONSchemaBench zero-shot, solo schemi entro 1500 caratteri, 50 casi; stessi casi senza e con la grammatica del motore. Sostituisce la versione lm-eval 2-shot (prompt ~1500 token) |
 | `evalita_ner_re` | italiano nativo | un solo dataset NER (ADG) + RE, due prompt ciascuno, 25 casi per sottotask |
 | `evalita_sa` | sentiment | 100 casi, forma generativa, F1 SENTIPOLC come l'originale |
-| `belebele_it` / `belebele_en` | comprensione | 80 casi ciascuno |
+| `belebele_it` / `belebele_en` | comprensione | 80 casi ciascuno, risposta vincolata ad A/B/C/D con lo schema JSON del motore (dalla versione 2) |
 | `bfcl` | strumenti | 40 `simple_python` + 40 `irrelevance`, controllo argomenti semplificato |
 | `gilpa_intent` | custom | nessuna: `bench.py` come scatola nera, su entrambe le macchine |
 | `gsm8k` | ragionamento | 50 casi, solo nel confronto thinking on/off |
@@ -226,6 +226,36 @@ Il primo giro completo su NASGUL ha mostrato cosa non serve ripetere:
 I risultati già misurati delle celle tolte restano nel database e nel foglio. `prune` senza
 opzioni toglie solo le righe `skipped` ed `error` rimaste orfane; **`prune --all` cancellerebbe
 anche quei risultati `ok`**, che servono all'articolo come "provati e scartati": non usarlo.
+
+### Correzioni alle misure (ottobre 2026)
+
+Leggendo le risposte singole nel database sono emersi tre difetti di misura, non dei modelli:
+
+- **Belebele** leggeva la prima lettera in una risposta libera di 8 token. Gemma 4, MiniCPM5 e
+  SmolLM3 (in inglese) ragionano ad alta voce e finivano i token prima di rispondere: 0/80. Dalla
+  versione 2 la risposta è vincolata ad A/B/C/D, come nel test intenti. Il cambio di versione fa
+  ripetere Belebele da solo al prossimo `run`; le chiavi delle celle non cambiano.
+- **RAM di picco**: llama-server tiene per default fino a 8 GB di prompt in RAM (`--cache-ram`).
+  Sui test pubblici lo 0.8B arrivava a 9 GB e il 9B a 14 GB. Ora i motori llama.cpp partono con
+  `cache_ram_mb: 0` (in `engines`), così il picco misura il modello. Vale dai prossimi test.
+- **BFCL**: metà dei casi premia il non chiamare funzioni, quindi un modello che non ne chiama mai
+  fa 50% senza aver fatto nulla (phi4-mini e SmolLM3: il template non passa le funzioni).
+
+Sul foglio ci sono due colonne nuove, in fondo: `ram_gb` (picco di RAM del server) e `note`, che
+riporta le due categorie BFCL, il JSON valido, le risposte Belebele senza lettera e segna
+`NON VALIDO` i punteggi che misurano un difetto della prova. Si calcolano dai campioni già
+salvati: `./lab/lab.sh sync` le riempie anche per i risultati vecchi.
+
+**Spegnere il ragionamento.** `--reasoning-budget 0` non basta per tutti i modelli. Per trovare
+l'opzione giusta:
+
+```bash
+./lab/lab.sh probe-thinking --model gemma4-e2b
+```
+
+Avvia il modello una volta per ogni opzione candidata, fa due domande a risposta secca e dice
+quale lo spegne. L'opzione va poi scritta nel modello (`thinking_off_args` in `models`), dove
+vince su quella del motore. Non tocca database né foglio.
 
 Stima con `plan` (ordine di grandezza): circa 20 ore su NASGUL e 7 giorni sulla Z87. Il piano
 integrale era di 83 giorni su NASGUL. Per un modello in suite base sulla Z87 servono circa 6 ore,

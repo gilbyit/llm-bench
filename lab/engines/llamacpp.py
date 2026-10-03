@@ -22,6 +22,10 @@ class LlamaCpp(Engine):
         self.fa_style = cfg.get("fa_style", "value")        # value: -fa on|off ; switch: -fa
         self.jinja = cfg.get("jinja", True)
         self.think_off = cfg.get("thinking_off_args", ["--reasoning-budget", "0"])
+        # Cache dei prompt in RAM di llama-server (--cache-ram, in MiB). Il default del server è 8192:
+        # con prompt sempre diversi il processo cresce di 8 GB qualunque sia il modello, e il picco di
+        # RAM misurato non dice più nulla. None = non passare l'opzione (build che non la conoscono).
+        self.cache_ram = cfg.get("cache_ram_mb")
         self.extra = cfg.get("extra_args", [])
         root = ctx.data_dir / "engines" / name
         self.src = Path(cfg["src_dir"]) if cfg.get("src_dir") else root / "src"
@@ -107,7 +111,11 @@ class LlamaCpp(Engine):
         if self.jinja:
             a += ["--jinja"]
         if p.get("thinking") == "off":
-            a += self.think_off
+            # un modello può avere le sue opzioni (matrix.yaml: models.<id>.thinking_off_args):
+            # quella del motore non spegne il ragionamento di tutti i template
+            a += model_cfg.get("thinking_off_args", self.think_off)
+        if self.cache_ram is not None:
+            a += ["--cache-ram", self.cache_ram]
         if draft is not None:
             a += ["-md", draft.local, "--spec-draft-n-max", str(p.get("draft_max", 16))]
         a += model_cfg.get("llamacpp_args", []) + self.extra

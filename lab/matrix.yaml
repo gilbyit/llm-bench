@@ -141,6 +141,10 @@ models:
     active_params_b: 2
     capabilities: [thinking]
     llamacpp_args: ["--swa-full"]
+    # Con --reasoning-budget 0 Gemma 4 ragiona lo stesso, nel testo della risposta (visto su
+    # Belebele e BFCL). Trova l'opzione giusta con `lab.sh probe-thinking --model gemma4-e2b` e
+    # scrivila qui e in gemma4-e4b, per esempio:
+    # thinking_off_args: ["--reasoning", "off"]
     sources:
       gguf: {repo: unsloth/gemma-4-E2B-it-GGUF}      # DA VERIFICARE
   gemma4-e4b:
@@ -238,10 +242,15 @@ engines:
     ref: b11255  # era master       # fissa un tag (es. b7000) per risultati riproducibili
     cmake_flags: ["-DGGML_NATIVE=ON", "-DLLAMA_CURL=OFF"]
     # bin_dir: /percorso/llama.cpp/build/bin   # per usare una build esistente (es. quella di Palantir)
+    # Cache dei prompt in RAM spenta (--cache-ram 0). Con il default del server (8192 MiB) lo 0.8B,
+    # file da 0,5 GB, arrivava a 9,1 GB sui test pubblici e il 9B a 14,2 GB su 15,3: il picco di RAM
+    # misurava la cache, non il modello. La cache dello slot (prompt_cache on) non cambia.
+    cache_ram_mb: 0
   llamacpp-docker:
     kind: llamacpp
     image_server: ghcr.io/ggml-org/llama.cpp:server
     image_full: ghcr.io/ggml-org/llama.cpp:full
+    cache_ram_mb: 0
   ik-llamacpp:
     kind: llamacpp
     repo: https://github.com/ikawrakow/ik_llama.cpp

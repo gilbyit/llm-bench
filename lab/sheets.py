@@ -18,6 +18,7 @@ import atexit
 import json
 import os
 import queue
+import re
 import threading
 import time
 from collections import Counter, defaultdict
@@ -252,6 +253,54 @@ class SheetSync:
 
 
 # --- conversione dal database alle righe del foglio ---------------------------------------
+def _note(db, r) -> str:
+    """Dettaglio che la metrica principale nasconde, ricavato dai campioni già salvati (vale anche
+    per i risultati vecchi: basta `lab.sh sync`). Serve soprattutto a segnalare i punteggi che non
+    misurano il modello ma un difetto della prova."""
+    if r["status"] != "ok":
+        return ""
+    S = []
+    for s in db.execute("SELECT correct, error, extra_json FROM samples WHERE run_id=?", (r["id"],)):
+        try:
+            ex = json.loads(s["extra_json"]) if s["extra_json"] else {}
+        except (TypeError, ValueError):
+            ex = {}
+        if not s["error"]:
+            S.append((s["correct"] or 0, ex))
+    if not S:
+        return ""
+    test = r["test"]
+    if test.startswith("bfcl"):
+        simple = [(c, ex) for c, ex in S if not str(ex.get("cat", "")).endswith("irrelevance")]
+        irr = [(c, ex) for c, ex in S if str(ex.get("cat", "")).endswith("irrelevance")]
+        note = (f"chiamate semplici {int(sum(c for c, _ in simple))}/{len(simple)}, "
+                f"astensione {int(sum(c for c, _ in irr))}/{len(irr)}")
+        if simple and not any(ex.get("n_calls") for _, ex in simple):
+            note = ("NON VALIDO: nessuna chiamata in tutto il test, il template non passa le funzioni "
+                    "al modello. " + note)
+        return note
+    if test.startswith("belebele"):
+        def pred(ex):
+            if "pred" in ex:
+                return ex["pred"]
+            m = re.search(r"\b([ABCD])\b", str(ex.get("answer", "")).upper())
+            return m.group(1) if m else None
+        preds = [pred(ex) for _, ex in S]
+        missing = sum(1 for p in preds if p is None)
+        top, n_top = Counter(p for p in preds if p).most_common(1)[0] if any(preds) else (None, 0)
+        notes = []
+        if missing * 4 >= len(S):
+            notes.append(f"NON VALIDO: {missing}/{len(S)} risposte senza lettera (ragionamento o testo tagliato)")
+        elif missing:
+            notes.append(f"{missing}/{len(S)} risposte senza lettera")
+        if top and n_top * 2 > len(S):
+            notes.append(f"risponde {top} in {n_top} casi su {len(S)}")
+        return "; ".join(notes)
+    if test.startswith("json"):
+        return f"JSON valido {sum(1 for _, ex in S if ex.get('valid'))}/{len(S)}"
+    return ""
+
+
 def result_row(db, run_id: int) -> dict | None:
     r = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
     if r is None:
@@ -293,6 +342,7 @@ def result_row(db, run_id: int) -> dict | None:
         "kld_en": _num(mets.get("wiki_en.kld_mean")),
         "durata_min": round(r["duration_s"] / 60, 1) if r["duration_s"] else "",
         "file_gb": r["file_size_gb"] or "",
+        "ram_gb": round(r["peak_rss_mb"] / 1024, 2) if r["peak_rss_mb"] else "",
         "threads": p.get("threads"),
         "fa": p.get("fa"),
         "kv": p.get("kv"),
@@ -306,6 +356,10 @@ def result_row(db, run_id: int) -> dict | None:
         "tentativo": r["attempt"],
         "run_id": r["id"],
     }
+    try:
+        row["note"] = _note(db, r)
+    except Exception as e:   # una nota non deve mai far perdere la riga
+        row["note"] = f"(nota non calcolata: {type(e).__name__})"
     return {k: ("" if v is None else v) for k, v in row.items()}
 
 
