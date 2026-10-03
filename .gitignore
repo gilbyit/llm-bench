@@ -5,4 +5,3 @@ __pycache__/
 labdata/
 results/lab.sqlite-wal
 results/lab.sqlite-shm
-results/lab.sqlite
