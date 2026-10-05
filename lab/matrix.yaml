@@ -141,6 +141,7 @@ models:
     active_params_b: 2
     capabilities: [thinking]
     llamacpp_args: ["--swa-full"]
+    thinking_off_args: ["--reasoning", "off"]
     # Con --reasoning-budget 0 Gemma 4 ragiona lo stesso, nel testo della risposta (visto su
     # Belebele e BFCL). Trova l'opzione giusta con `lab.sh probe-thinking --model gemma4-e2b` e
     # scrivila qui e in gemma4-e4b, per esempio:
@@ -153,6 +154,7 @@ models:
     active_params_b: 4
     capabilities: [thinking]
     llamacpp_args: ["--swa-full"]
+    thinking_off_args: ["--reasoning", "off"]
     sources:
       gguf: {repo: unsloth/gemma-4-E4B-it-GGUF}      # DA VERIFICARE
   ministral3-3b:
